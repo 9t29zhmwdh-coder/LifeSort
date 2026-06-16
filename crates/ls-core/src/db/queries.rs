@@ -62,7 +62,7 @@ pub async fn insert_file(pool: &SqlitePool, entry: &FileEntry) -> Result<()> {
          extracted_sender, ai_summary, classified_by, duplicate_group_id)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"#,
         entry.id, entry.scan_session_id, entry.path, entry.name, entry.extension,
-        entry.size as i64, entry.mime_type, kind, entry.hash,
+        { let sz = entry.size as i64; sz }, entry.mime_type, kind, entry.hash,
         created_at, modified_at, exif_date, w, h,
         category, subcategory, confidence, tags, extracted_date, extracted_amount,
         extracted_sender, ai_summary, classified_by, entry.duplicate_group_id
@@ -81,7 +81,7 @@ pub async fn list_files_by_session(pool: &SqlitePool, session_id: &str) -> Resul
     .await?;
 
     rows.into_iter().map(|r| {
-        let kind = match r.kind.as_deref().unwrap_or("unknown") {
+        let kind = match r.kind.as_str() {
             "photo" => FileKind::Photo,
             "pdf" => FileKind::Pdf,
             "video" => FileKind::Video,
@@ -96,13 +96,13 @@ pub async fn list_files_by_session(pool: &SqlitePool, session_id: &str) -> Resul
             .and_then(|t| serde_json::from_str(t).ok())
             .unwrap_or_default();
         Ok(FileEntry {
-            id: r.id,
-            scan_session_id: r.scan_session_id,
+            id: r.id.unwrap_or_default(),
+            scan_session_id: r.scan_session_id.unwrap_or_default(),
             path: r.path,
             name: r.name,
             extension: r.extension,
             size: r.size as u64,
-            mime_type: r.mime_type.unwrap_or_default(),
+            mime_type: r.mime_type,
             kind,
             hash: r.hash,
             created_at: None,
@@ -156,9 +156,9 @@ pub async fn list_actions(pool: &SqlitePool) -> Result<Vec<OrganizeAction>> {
     .await?;
 
     Ok(rows.into_iter().map(|r| OrganizeAction {
-        id: r.id,
-        file_id: r.file_id,
-        file_name: r.file_name,
+        id: r.id.unwrap_or_default(),
+        file_id: r.file_id.unwrap_or_default(),
+        file_name: r.file_name.unwrap_or_default(),
         kind: match r.kind.as_str() {
             "move"   => ActionKind::Move,
             "delete" => ActionKind::Delete,
