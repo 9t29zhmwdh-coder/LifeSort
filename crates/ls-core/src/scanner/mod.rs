@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 pub mod metadata;
 
 use crate::models::{FileEntry, FileKind};
