@@ -10,8 +10,6 @@ static ASSET_PATTERNS: Lazy<Regex> = Lazy::new(|| {
 });
 
 pub fn classify(entry: &FileEntry) -> Classification {
-    let name_lower = entry.name.to_lowercase();
-
     // Explicit Installer by kind
     if matches!(entry.kind, FileKind::Installer) {
         return Classification {
@@ -84,3 +82,4 @@ fn base() -> Classification {
         classified_by: ClassifierKind::Rules,
     }
 }
+
