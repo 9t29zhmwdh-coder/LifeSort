@@ -20,16 +20,14 @@ impl FileWatcher {
         let tx_clone = tx.clone();
 
         std::thread::spawn(move || {
-            for result in debouncer_rx {
-                if let Ok(events) = result {
-                    let paths: Vec<String> = events
-                        .iter()
-                        .flat_map(|e| e.event.paths.iter())
-                        .map(|p| p.to_string_lossy().into_owned())
-                        .collect();
-                    if !paths.is_empty() {
-                        let _ = tx_clone.blocking_send(paths);
-                    }
+            for events in debouncer_rx.into_iter().filter_map(Result::ok) {
+                let paths: Vec<String> = events
+                    .iter()
+                    .flat_map(|e| e.event.paths.iter())
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .collect();
+                if !paths.is_empty() {
+                    let _ = tx_clone.blocking_send(paths);
                 }
             }
         });
