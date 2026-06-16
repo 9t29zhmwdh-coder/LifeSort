@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 pub mod hasher;
 
 use crate::models::{DuplicateGroup, FileEntry};
