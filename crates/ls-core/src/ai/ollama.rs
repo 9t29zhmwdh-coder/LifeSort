@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use super::AiBackend;
 use crate::models::{Category, Classification, ClassifierKind};
 use anyhow::{bail, Result};
