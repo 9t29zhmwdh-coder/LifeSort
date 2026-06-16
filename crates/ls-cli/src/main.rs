@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use ls_core::{
-    classifier, dedup,
+    dedup,
     models::FileEntry,
     organizer::{self, ConflictStrategy, OrganizerConfig},
     scanner::{self, ScanOptions},
