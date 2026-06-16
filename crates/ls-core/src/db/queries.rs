@@ -98,7 +98,7 @@ pub async fn list_files_by_session(pool: &SqlitePool, session_id: &str) -> Resul
             .unwrap_or_default();
         Ok(FileEntry {
             id: r.id.unwrap_or_default(),
-            scan_session_id: r.scan_session_id.unwrap_or_default(),
+            scan_session_id: r.scan_session_id,
             path: r.path,
             name: r.name,
             extension: r.extension,
@@ -158,8 +158,8 @@ pub async fn list_actions(pool: &SqlitePool) -> Result<Vec<OrganizeAction>> {
 
     Ok(rows.into_iter().map(|r| OrganizeAction {
         id: r.id.unwrap_or_default(),
-        file_id: r.file_id.unwrap_or_default(),
-        file_name: r.file_name.unwrap_or_default(),
+        file_id: r.file_id,
+        file_name: r.file_name,
         kind: match r.kind.as_str() {
             "move"   => ActionKind::Move,
             "delete" => ActionKind::Delete,
