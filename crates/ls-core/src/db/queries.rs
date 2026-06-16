@@ -54,6 +54,7 @@ pub async fn insert_file(pool: &SqlitePool, entry: &FileEntry) -> Result<()> {
     let modified_at = entry.modified_at.to_rfc3339();
     let exif_date = entry.exif_date.map(|d| d.to_rfc3339());
     let created_at = entry.created_at.map(|d| d.to_rfc3339());
+    let sz = entry.size as i64;
 
     sqlx::query!(
         r#"INSERT OR REPLACE INTO file_entries
@@ -63,7 +64,7 @@ pub async fn insert_file(pool: &SqlitePool, entry: &FileEntry) -> Result<()> {
          extracted_sender, ai_summary, classified_by, duplicate_group_id)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"#,
         entry.id, entry.scan_session_id, entry.path, entry.name, entry.extension,
-        { let sz = entry.size as i64; sz }, entry.mime_type, kind, entry.hash,
+        sz, entry.mime_type, kind, entry.hash,
         created_at, modified_at, exif_date, w, h,
         category, subcategory, confidence, tags, extracted_date, extracted_amount,
         extracted_sender, ai_summary, classified_by, entry.duplicate_group_id
