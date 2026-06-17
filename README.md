@@ -6,9 +6,9 @@
 
 [🇩🇪 Deutsche Version](README.de.md)
 
-**AI-powered local file organizer — offline, private, cross-platform, built with Rust + Tauri.**
+**AI-powered local file organizer. Offline, private, cross-platform, built with Rust and Tauri.**
 
-LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PDFs, and documents into a clean folder structure — **fully offline**, using local AI models. No cloud, no tracking, no manual sorting.
+LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PDFs, and documents into a clean folder structure; **fully offline**, using local AI models. No cloud, no tracking, no manual sorting.
 
 [![CI](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/ci.yml)
 ![Rust](https://img.shields.io/badge/Rust-1.77+-orange?logo=rust)
@@ -28,7 +28,7 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 | **Download Sorting** | Automatically categorizes installers, archives, assets, junk |
 | **Smart Tagging** | AI-generated tags per file |
 | **Duplicate Detection** | BLAKE3 content hashing, wasted space report |
-| **Organization Proposals** | Suggests move actions, shows target path and reason — user confirms |
+| **Organization Proposals** | Suggests move actions, shows target path and reason: user confirms |
 | **Plugin System** | Custom file type handlers via Rust trait |
 
 ---
@@ -60,7 +60,7 @@ cargo tauri dev
 
 ## Privacy
 
-LifeSort processes all files **locally on your machine**. No data is uploaded to the cloud. Ollama runs the models entirely offline — your files never leave your device.
+LifeSort processes all files **locally on your machine**. No data is uploaded to the cloud. Ollama runs the models entirely offline; your files never leave your device.
 
 ---
 
