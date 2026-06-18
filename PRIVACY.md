@@ -1,11 +1,11 @@
-# Privacy Policy — LifeSort
+# Privacy Policy : LifeSort
 
 LifeSort runs **fully offline** on your local machine.
 
 ## What data is processed
 
-- File names, paths, and metadata (size, date, type) — for classification and sorting
-- File content (photos, PDFs, documents) — analyzed locally for AI classification
+- File names, paths, and metadata (size, date, type) : for classification and sorting
+- File content (photos, PDFs, documents) : analyzed locally for AI classification
 
 ## What data leaves your machine
 
