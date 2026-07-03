@@ -84,4 +84,4 @@ LifeSort/
 
 ---
 
-**Autor:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Active · v0.1.0 · **Lizenz:** MIT
+**Autor:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Active · ![version](https://img.shields.io/github/v/release/9t29zhmwdh-coder/LifeSort?label=\&color=6b7280\&style=flat-square) · **Lizenz:** MIT
