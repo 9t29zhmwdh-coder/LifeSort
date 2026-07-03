@@ -28,7 +28,7 @@ rayon    = "1"
 base64   = "0.22"
 image    = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif", "tiff"] }
 kamadak_exif = { package = "kamadak-exif", version = "0.5" }
-lopdf    = "0.36"
+lopdf    = "0.42"
 mime_guess = "2"
 notify              = "6"
 notify-debouncer-full = "0.3"
