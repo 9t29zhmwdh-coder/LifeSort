@@ -64,10 +64,10 @@ LifeSort processes all files **locally on your machine**. No data is uploaded to
 
 ```
 LifeSort/
-├── crates/ls-core/      — Rust: scanner, classifier, tagger, DB
-├── crates/ls-cli/       — CLI binary
-├── src-tauri/           — Tauri v2 backend + IPC commands
-└── frontend/            — React + TypeScript + Tailwind + Recharts
+├── crates/ls-core/      # Rust: scanner, classifier, tagger, DB
+├── crates/ls-cli/       # CLI binary
+├── src-tauri/           # Tauri v2 backend + IPC commands
+└── frontend/            # React + TypeScript + Tailwind + Recharts
 ```
 
 ### Output Folder Structure

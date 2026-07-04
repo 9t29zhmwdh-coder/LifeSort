@@ -66,10 +66,10 @@ LifeSort verarbeitet alle Dateien **lokal auf deinem Gerät**. Es werden keine D
 
 ```
 LifeSort/
-├── crates/ls-core/      — Rust: Scanner, Klassifizierung, Tagging, DB
-├── crates/ls-cli/       — CLI-Binary
-├── src-tauri/           — Tauri v2 Backend + IPC-Commands
-└── frontend/            — React + TypeScript + Tailwind + Recharts
+├── crates/ls-core/      # Rust: Scanner, Klassifizierung, Tagging, DB
+├── crates/ls-cli/       # CLI-Binary
+├── src-tauri/           # Tauri v2 Backend + IPC-Commands
+└── frontend/            # React + TypeScript + Tailwind + Recharts
 ```
 
 ### Ziel-Ordnerstruktur
