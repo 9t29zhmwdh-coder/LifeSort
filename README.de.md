@@ -14,6 +14,12 @@ LifeSort erkennt, klassifiziert, taggt und sortiert Dateien, Fotos, PDFs und Dok
 ![Plattform](https://img.shields.io/badge/Plattform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 ![Lizenz](https://img.shields.io/badge/Lizenz-MIT-green)
 
+> **So läuft es:** LifeSort ist eine native Desktop-App, kein Server und kein Browser-Tool. Sie öffnet sich als eigenes Fenster, funktioniert vollständig offline und hat kein Tray-Icon und keinen Hintergrunddienst; sie läuft nur, solange das Fenster offen ist.
+
+![LifeSort](docs/screenshot.de.png)
+
+**In der Praxis:** du scannst einmal einen Ordner, LifeSort klassifiziert jede Datei lokal mit Ollama, und du erhältst eine übersichtliche Ansicht mit Sortier-Vorschlägen, die du vor jeder Verschiebung bestätigst. KI unterstützt nur bei Erkennung, Tagging und Zusammenfassungen; die zugrunde liegende Scan-, Hash- und Verschiebe-Logik funktioniert auch ohne sie.
+
 ---
 
 ## Funktionen
@@ -53,6 +59,16 @@ ollama pull llava
 cd frontend && npm install && cd ..
 cargo tauri dev
 ```
+
+---
+
+## Deinstallation / Aufräumen
+
+LifeSort ist eine eigenständige App ohne Installer und ohne Hintergrunddienst.
+
+- **macOS:** App-Bundle löschen, danach `~/Library/Application Support/LifeSort/` (Datenbank, Einstellungen) und, falls vorhanden, `~/Library/Logs/LifeSort/` entfernen.
+- **Windows:** App-Ordner entfernen, danach `%APPDATA%\LifeSort\` löschen.
+- LifeSort greift nie auf Dateien ausserhalb der explizit gescannten und organisierten Ordner zu; es gibt sonst nichts aufzuräumen.
 
 ---
 

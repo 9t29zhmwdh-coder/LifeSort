@@ -12,6 +12,12 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 
 [![CI](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/LifeSort/actions) ![Platform](https://img.shields.io/badge/Platform-macOS_%7C_Windows-lightgrey) ![Rust](https://img.shields.io/badge/Rust-CE422B?logo=rust&logoColor=white) ![Tauri](https://img.shields.io/badge/Tauri-24C8D8?logo=tauri&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude_Code-black?logo=anthropic&logoColor=white) ![AI | Copilot](https://img.shields.io/badge/AI-Copilot-black?logo=github&logoColor=white) ![AI | Ollama](https://img.shields.io/badge/AI-Ollama-black?logo=ollama&logoColor=white)
 
+> **How it runs:** LifeSort is a native desktop app, not a server or browser tool. It opens as its own window, works fully offline, and has no tray icon or background service; it only runs while the window is open.
+
+![LifeSort](docs/screenshot.png)
+
+**In practice:** you scan a folder once, LifeSort classifies every file locally with Ollama, and you get a clean overview with sort suggestions you confirm before anything moves. AI only assists with recognition, tagging, and summaries; the underlying scan, hash, and move logic works without it.
+
 ---
 
 ## Features
@@ -51,6 +57,16 @@ ollama pull llava
 cd frontend && npm install && cd ..
 cargo tauri dev
 ```
+
+---
+
+## Uninstall / Cleanup
+
+LifeSort is a self-contained app with no installer and no background service.
+
+- **macOS:** delete the app bundle, then remove `~/Library/Application Support/LifeSort/` (database, settings) and `~/Library/Logs/LifeSort/` if present.
+- **Windows:** remove the app folder, then delete `%APPDATA%\LifeSort\`.
+- LifeSort never touches your original files outside the folders you explicitly scan and organize; there is nothing else to clean up.
 
 ---
 
