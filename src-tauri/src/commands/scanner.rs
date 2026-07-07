@@ -5,7 +5,7 @@ use ls_core::{
     models::FileEntry,
     scanner::{self, ScanOptions},
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
 use uuid::Uuid;
@@ -45,7 +45,7 @@ pub async fn scan_directory(
             &opts,
             |entry| {
                 batch.push(entry);
-                if batch.len() % 50 == 0 {
+                if batch.len().is_multiple_of(50) {
                     let _ = app_clone.emit("scan://progress", batch.len());
                 }
             },

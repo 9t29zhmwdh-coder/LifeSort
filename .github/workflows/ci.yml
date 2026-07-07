@@ -28,11 +28,26 @@ jobs:
           sqlx database create
           sqlx migrate run --source crates/ls-core/src/db/migrations
       - name: cargo check
-        run: cargo check --workspace --exclude lifesort-tauri
+        run: cargo check --workspace
       - name: cargo clippy
-        run: cargo clippy --workspace --exclude lifesort-tauri -- -D warnings
+        run: cargo clippy --workspace -- -D warnings
       - name: cargo test
-        run: cargo test --workspace --exclude lifesort-tauri
+        run: cargo test --workspace
+
+  frontend:
+    name: Frontend typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Typecheck & build
+        run: npm run build
+        working-directory: frontend
 
   audit:
     name: Security audit

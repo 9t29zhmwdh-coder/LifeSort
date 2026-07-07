@@ -9,8 +9,8 @@ pub enum LsError {
     Db(#[from] sqlx::Error),
     #[error("Anyhow: {0}")]
     Anyhow(#[from] anyhow::Error),
-    #[error("{0}")]
-    Custom(String),
+    #[error("Tauri: {0}")]
+    Tauri(#[from] tauri::Error),
 }
 
 impl Serialize for LsError {

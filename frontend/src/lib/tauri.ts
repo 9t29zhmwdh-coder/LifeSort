@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { t } from './i18n'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -149,15 +150,15 @@ export function formatBytes(bytes: number): string {
 
 export function categoryLabel(cat: Category): string {
   const map: Record<Category, string> = {
-    photo_person: 'Foto — Person', photo_landscape: 'Foto — Ort',
-    photo_event: 'Foto — Ereignis', photo_screenshot: 'Screenshot',
-    photo_meme: 'Meme', photo_document: 'Foto — Dokument',
-    invoice: 'Rechnung', contract: 'Vertrag', guarantee: 'Garantie',
-    tax_document: 'Steuerdokument', letter: 'Brief',
-    certificate: 'Zertifikat', report: 'Bericht',
-    installer_app: 'Installer', download_archive: 'Archiv',
-    download_asset: 'Asset', download_junk: 'Müll',
-    video: 'Video', audio: 'Audio', code: 'Code', unknown: 'Unbekannt',
+    photo_person: t('catPhotoPerson'), photo_landscape: t('catPhotoLandscape'),
+    photo_event: t('catPhotoEvent'), photo_screenshot: t('catPhotoScreenshot'),
+    photo_meme: t('catPhotoMeme'), photo_document: t('catPhotoDocument'),
+    invoice: t('catInvoice'), contract: t('catContract'), guarantee: t('catGuarantee'),
+    tax_document: t('catTaxDocument'), letter: t('catLetter'),
+    certificate: t('catCertificate'), report: t('catReport'),
+    installer_app: t('catInstallerApp'), download_archive: t('catDownloadArchive'),
+    download_asset: t('catDownloadAsset'), download_junk: t('catDownloadJunk'),
+    video: t('catVideo'), audio: t('catAudio'), code: t('catCode'), unknown: t('catUnknown'),
   }
   return map[cat] ?? cat
 }

@@ -1,7 +1,6 @@
 use ls_core::{
     ai::ollama::OllamaBackend,
     models::{FileEntry, OrganizeAction},
-    organizer::OrganizerConfig,
 };
 use sqlx::SqlitePool;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};

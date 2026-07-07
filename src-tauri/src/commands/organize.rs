@@ -50,7 +50,7 @@ pub async fn execute_action(
 
 #[tauri::command]
 pub async fn execute_all(
-    session_id: String,
+    _session_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> LsResult<Vec<(String, ActionStatus)>> {
     let mut stored = state.actions.write().await;

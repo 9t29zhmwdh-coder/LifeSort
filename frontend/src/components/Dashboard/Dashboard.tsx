@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
-import { api, formatBytes, type ScanStats } from '../../lib/tauri'
+import { api, formatBytes } from '../../lib/tauri'
 import { useScanStore } from '../../stores/scanStore'
+import { useT } from '../../lib/i18n'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
 type Tab = 'dashboard' | 'files' | 'duplicates' | 'organize' | 'settings'
@@ -12,9 +13,10 @@ const KIND_COLORS: Record<string, string> = {
   installer: '#ffa657', code: '#79c0ff', unknown: '#484f58',
 }
 
-export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
+export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const { session, scanning, classifying, progress, classifyProgress, setSession, setEntries, setStats, setScanning, stats } = useScanStore()
   const [error, setError] = useState('')
+  const t = useT()
 
   const handleScan = async () => {
     setError('')
@@ -61,7 +63,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
           disabled={scanning}
           className="px-5 py-2.5 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          {scanning ? `Scanne… (${progress} Dateien)` : 'Ordner scannen'}
+          {scanning ? t('scanning', { n: progress }) : t('scanFolder')}
         </button>
         {session && !scanning && (
           <button
@@ -70,8 +72,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             className="px-5 py-2.5 bg-[#1f6feb] hover:bg-[#388bfd] disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             {classifying
-              ? `AI klassifiziert… ${classifyProgress[0]}/${classifyProgress[1]}`
-              : 'Mit AI klassifizieren'}
+              ? t('aiClassifying', { done: classifyProgress[0], total: classifyProgress[1] })
+              : t('classifyWithAi')}
           </button>
         )}
         {session && (
@@ -87,16 +89,16 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
         <>
           {/* Stats bar */}
           <div className="grid grid-cols-4 gap-4 mb-8">
-            <StatCard label="Dateien" value={stats.total_files} />
-            <StatCard label="Grösse" value={formatBytes(stats.total_size_bytes)} />
-            <StatCard label="Klassifiziert" value={`${stats.classified} / ${stats.total_files}`} />
-            <StatCard label="Duplikate" value={stats.duplicate_count} warn={stats.duplicate_count > 0} />
+            <StatCard label={t('statFiles')} value={stats.total_files} />
+            <StatCard label={t('statSize')} value={formatBytes(stats.total_size_bytes)} />
+            <StatCard label={t('statClassified')} value={`${stats.classified} / ${stats.total_files}`} />
+            <StatCard label={t('statDuplicates')} value={stats.duplicate_count} warn={stats.duplicate_count > 0} />
           </div>
 
           {/* Pie chart + category list */}
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4">
-              <div className="text-sm font-semibold text-[#8b949e] mb-3">Nach Dateityp</div>
+              <div className="text-sm font-semibold text-[#8b949e] mb-3">{t('byFileType')}</div>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name }) => name}>
@@ -112,7 +114,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
             </div>
 
             <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4">
-              <div className="text-sm font-semibold text-[#8b949e] mb-3">Nach Kategorie</div>
+              <div className="text-sm font-semibold text-[#8b949e] mb-3">{t('byCategory')}</div>
               <div className="space-y-1 overflow-y-auto max-h-[200px]">
                 {Object.entries(stats.by_category)
                   .sort((a, b) => b[1] - a[1])
@@ -128,9 +130,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
 
           {/* Quick actions */}
           <div className="flex gap-3">
-            <QuickAction label="Dateien anzeigen" onClick={() => onNavigate('files')} />
-            <QuickAction label="Duplikate bereinigen" onClick={() => onNavigate('duplicates')} warn />
-            <QuickAction label="Sortier-Vorschläge" onClick={() => onNavigate('organize')} primary />
+            <QuickAction label={t('viewFiles')} onClick={() => onNavigate('files')} />
+            <QuickAction label={t('cleanUpDuplicates')} onClick={() => onNavigate('duplicates')} warn />
+            <QuickAction label={t('sortSuggestions')} onClick={() => onNavigate('organize')} primary />
           </div>
         </>
       )}
@@ -138,7 +140,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: Tab) => void }) {
       {!stats && !scanning && (
         <div className="flex flex-col items-center justify-center h-64 text-[#8b949e]">
           <div className="text-4xl mb-3">📁</div>
-          <div className="text-sm">Wähle einen Ordner zum Scannen</div>
+          <div className="text-sm">{t('pickFolderPrompt')}</div>
         </div>
       )}
     </div>

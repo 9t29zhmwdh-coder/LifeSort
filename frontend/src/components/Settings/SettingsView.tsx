@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
 import { api, type AppSettings } from '../../lib/tauri'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useT } from '../../lib/i18n'
 
 export function SettingsView() {
   const { settings, setSettings, setOllamaOnline } = useSettingsStore()
@@ -9,6 +10,7 @@ export function SettingsView() {
   const [saved, setSaved] = useState(false)
   const [checking, setChecking] = useState(false)
   const [ollamaMsg, setOllamaMsg] = useState('')
+  const t = useT()
 
   const set = <K extends keyof AppSettings>(k: K, v: AppSettings[K]) =>
     setDraft(d => ({ ...d, [k]: v }))
@@ -24,7 +26,7 @@ export function SettingsView() {
     setChecking(true); setOllamaMsg('')
     const ok = await api.checkOllama().catch(() => false)
     setOllamaOnline(ok)
-    setOllamaMsg(ok ? 'Ollama erreichbar ✓' : 'Ollama nicht erreichbar')
+    setOllamaMsg(ok ? `${t('ollamaReachable')} ✓` : t('ollamaUnreachable'))
     setChecking(false)
   }
 
@@ -35,21 +37,21 @@ export function SettingsView() {
 
   return (
     <div className="p-6 max-w-lg overflow-y-auto h-full">
-      <h2 className="text-lg font-semibold text-[#e6edf3] mb-6">Einstellungen</h2>
+      <h2 className="text-lg font-semibold text-[#e6edf3] mb-6">{t('settingsTitle')}</h2>
 
-      <Section title="KI — Ollama">
-        <Label>Ollama URL</Label>
+      <Section title={t('localAiSection')}>
+        <Label>{t('ollamaUrl')}</Label>
         <Input value={draft.ollama_url} onChange={v => set('ollama_url', v)} />
-        <Label>Text-Modell</Label>
+        <Label>{t('textModel')}</Label>
         <Input value={draft.text_model} onChange={v => set('text_model', v)} placeholder="llama3" />
-        <Label>Vision-Modell (für Bilder)</Label>
+        <Label>{t('visionModel')}</Label>
         <Input value={draft.vision_model} onChange={v => set('vision_model', v)} placeholder="llava" />
         <button
           onClick={handleCheckOllama}
           disabled={checking}
           className="mt-2 px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] rounded transition-colors"
         >
-          {checking ? 'Teste…' : 'Verbindung testen'}
+          {checking ? t('testing') : t('testConnection')}
         </button>
         {ollamaMsg && (
           <div className={`mt-1 text-xs ${ollamaMsg.includes('✓') ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
@@ -58,8 +60,8 @@ export function SettingsView() {
         )}
       </Section>
 
-      <Section title="Zielordner">
-        <Label>Basis-Verzeichnis für sortierte Dateien</Label>
+      <Section title={t('targetFolderSection')}>
+        <Label>{t('baseDirectory')}</Label>
         <div className="flex gap-2">
           <input
             value={draft.target_root}
@@ -70,40 +72,35 @@ export function SettingsView() {
             onClick={handlePickFolder}
             className="px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] rounded transition-colors"
           >
-            Wählen
+            {t('choose')}
           </button>
         </div>
         <p className="text-xs text-[#8b949e] mt-1">
-          Standard-Unterordner: Fotos/, Dokumente/, Downloads/, Medien/…
+          {t('defaultSubfolders')}
         </p>
       </Section>
 
-      <Section title="Scan-Optionen">
+      <Section title={t('scanOptionsSection')}>
         <Toggle
-          label="Versteckte Dateien überspringen"
+          label={t('skipHidden')}
           value={draft.skip_hidden}
           onChange={v => set('skip_hidden', v)}
         />
         <Toggle
-          label="Automatisch klassifizieren nach Scan"
+          label={t('autoClassify')}
           value={draft.auto_classify}
           onChange={v => set('auto_classify', v)}
         />
         <Toggle
-          label="Automatisch hashen (für Duplikaterkennung)"
+          label={t('autoHash')}
           value={draft.auto_hash}
           onChange={v => set('auto_hash', v)}
         />
       </Section>
 
-      <Section title="Standard-Ordner-Regeln">
+      <Section title={t('defaultRulesSection')}>
         <div className="text-xs text-[#8b949e] space-y-1">
-          <div>Fotos/Personen · Fotos/Orte · Fotos/Ereignisse/{'{Jahr}'}</div>
-          <div>Fotos/Screenshots · Fotos/Diverses</div>
-          <div>Dokumente/Rechnungen/{'{Jahr}'} · Dokumente/Vertraege</div>
-          <div>Dokumente/Garantien · Dokumente/Steuern/{'{Jahr}'}</div>
-          <div>Downloads/Installer · Downloads/Archive · Downloads/Muell</div>
-          <div>Medien/Videos · Medien/Audio · Entwicklung · Sonstiges</div>
+          {t('folderRulesExample').split('\n').map((line, i) => <div key={i}>{line}</div>)}
         </div>
       </Section>
 
@@ -111,7 +108,7 @@ export function SettingsView() {
         onClick={handleSave}
         className="w-full py-2.5 bg-[#238636] hover:bg-[#2ea043] text-white text-sm rounded-lg transition-colors"
       >
-        {saved ? 'Gespeichert!' : 'Einstellungen speichern'}
+        {saved ? t('saved') : t('saveSettings')}
       </button>
     </div>
   )
