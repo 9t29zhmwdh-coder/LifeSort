@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api, type OrganizeAction } from '../../lib/tauri'
 import { useScanStore } from '../../stores/scanStore'
 import { useActionStore } from '../../stores/actionStore'
+import { useT } from '../../lib/i18n'
 
 export function OrganizerView() {
   const { session } = useScanStore()
@@ -9,6 +10,7 @@ export function OrganizerView() {
   const [loading, setLoading] = useState(false)
   const [executing, setExecuting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const t = useT()
 
   const handlePropose = async () => {
     if (!session) return
@@ -57,7 +59,7 @@ export function OrganizerView() {
           disabled={!session || loading}
           className="px-4 py-2 bg-[#1f6feb] hover:bg-[#388bfd] disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
         >
-          {loading ? 'Analysiere…' : 'Vorschläge erstellen'}
+          {loading ? t('analyzing') : t('createProposals')}
         </button>
         {pending.length > 0 && (
           <button
@@ -66,13 +68,15 @@ export function OrganizerView() {
             className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
           >
             {executing
-              ? 'Führe aus…'
-              : `${selected.size} Aktion${selected.size !== 1 ? 'en' : ''} ausführen`}
+              ? t('executing')
+              : selected.size === 1
+                ? t('executeAction', { n: selected.size })
+                : t('executeActionsPlural', { n: selected.size })}
           </button>
         )}
         {actions.length > 0 && (
           <span className="text-xs text-[#8b949e]">
-            {pending.length} ausstehend · {applied.length} erledigt
+            {t('pendingCount', { pending: pending.length, applied: applied.length })}
           </span>
         )}
         {pending.length > 0 && (
@@ -80,7 +84,7 @@ export function OrganizerView() {
             onClick={() => setSelected(new Set(pending.map(a => a.id)))}
             className="ml-auto text-xs text-[#8b949e] hover:text-[#e6edf3]"
           >
-            Alle auswählen
+            {t('selectAll')}
           </button>
         )}
       </div>
@@ -90,7 +94,7 @@ export function OrganizerView() {
         {actions.length === 0 ? (
           <div className="text-center text-[#8b949e] py-16">
             <div className="text-3xl mb-2">📋</div>
-            <div className="text-sm">Erstelle Sortier-Vorschläge nach dem Scan</div>
+            <div className="text-sm">{t('noActionsYet')}</div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -121,6 +125,7 @@ function ActionRow({
   const isPending = action.status === 'pending'
   const isApplied = action.status === 'applied'
   const isFailed = typeof action.status === 'object'
+  const t = useT()
 
   return (
     <div className={`flex items-start gap-3 p-3 rounded-lg border ${
@@ -152,7 +157,7 @@ function ActionRow({
           onClick={onUndo}
           className="flex-shrink-0 text-xs text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded hover:bg-[#21262d]"
         >
-          Rückgängig
+          {t('undo')}
         </button>
       )}
     </div>

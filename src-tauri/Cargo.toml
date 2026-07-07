@@ -23,6 +23,7 @@ tracing-subscriber  = "0.3"
 dirs.workspace      = true
 keyring.workspace   = true
 uuid.workspace      = true
+sqlx.workspace      = true
 
 tauri         = { version = "2", features = [] }
 tauri-plugin-shell = "2"

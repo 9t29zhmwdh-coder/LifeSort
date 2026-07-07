@@ -1,12 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useScanStore } from '../../stores/scanStore'
 import { categoryLabel, formatBytes, kindIcon, type Category, type FileKind } from '../../lib/tauri'
-
-const KIND_LABELS: Record<FileKind, string> = {
-  photo: 'Foto', pdf: 'PDF', document: 'Dokument', video: 'Video',
-  audio: 'Audio', archive: 'Archiv', installer: 'Installer',
-  code: 'Code', font: 'Font', unknown: 'Unbekannt',
-}
+import { useT, getLang } from '../../lib/i18n'
 
 export function FileGrid() {
   const { entries } = useScanStore()
@@ -14,6 +9,12 @@ export function FileGrid() {
   const [filterCat, setFilterCat] = useState<string>('all')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
+  const t = useT()
+  const KIND_LABELS: Record<FileKind, string> = {
+    photo: t('kindPhoto'), pdf: t('kindPdf'), document: t('kindDocument'), video: t('kindVideo'),
+    audio: t('kindAudio'), archive: t('kindArchive'), installer: t('kindInstaller'),
+    code: t('kindCode'), font: t('kindFont'), unknown: t('kindUnknown'),
+  }
 
   const kinds = useMemo(() => {
     const s = new Set(entries.map(e => e.kind))
@@ -43,11 +44,11 @@ export function FileGrid() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Suche…"
+            placeholder={t('searchPlaceholder')}
             className="bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1 text-sm text-[#e6edf3] focus:outline-none focus:border-[#58a6ff] w-48"
           />
           <div className="flex gap-1 flex-wrap">
-            <Chip active={filterKind === 'all'} onClick={() => setFilterKind('all')}>Alle</Chip>
+            <Chip active={filterKind === 'all'} onClick={() => setFilterKind('all')}>{t('all')}</Chip>
             {kinds.map(k => (
               <Chip key={k} active={filterKind === k} onClick={() => setFilterKind(k)}>
                 {kindIcon(k)} {KIND_LABELS[k]}
@@ -56,7 +57,7 @@ export function FileGrid() {
           </div>
           {cats.length > 0 && (
             <div className="flex gap-1 flex-wrap ml-2 border-l border-[#30363d] pl-2">
-              <Chip active={filterCat === 'all'} onClick={() => setFilterCat('all')}>Alle Kat.</Chip>
+              <Chip active={filterCat === 'all'} onClick={() => setFilterCat('all')}>{t('allCategories')}</Chip>
               {cats.map(c => (
                 <Chip key={c} active={filterCat === c} onClick={() => setFilterCat(c)}>
                   {categoryLabel(c)}
@@ -64,13 +65,13 @@ export function FileGrid() {
               ))}
             </div>
           )}
-          <span className="ml-auto text-xs text-[#8b949e]">{filtered.length} Dateien</span>
+          <span className="ml-auto text-xs text-[#8b949e]">{t('filesCount', { n: filtered.length })}</span>
         </div>
 
         {/* Grid */}
         <div className="flex-1 overflow-y-auto p-4">
           {filtered.length === 0 ? (
-            <div className="text-center text-[#8b949e] py-16">Keine Dateien</div>
+            <div className="text-center text-[#8b949e] py-16">{t('noFiles')}</div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
               {filtered.map(entry => (
@@ -95,7 +96,7 @@ export function FileGrid() {
                   )}
                   {entry.duplicate_group_id && (
                     <div className="mt-1">
-                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#3d1a00] text-[#ffa657]">Duplikat</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#3d1a00] text-[#ffa657]">{t('duplicateBadge')}</span>
                     </div>
                   )}
                 </button>
@@ -111,33 +112,33 @@ export function FileGrid() {
           <div className="text-3xl mb-3">{kindIcon(selectedEntry.kind)}</div>
           <div className="text-sm font-semibold text-[#e6edf3] break-all mb-1">{selectedEntry.name}</div>
           <div className="text-xs text-[#8b949e] mb-4 break-all">{selectedEntry.path}</div>
-          <InfoRow label="Grösse" value={formatBytes(selectedEntry.size)} />
-          <InfoRow label="Typ" value={selectedEntry.mime_type} />
-          <InfoRow label="Geändert" value={new Date(selectedEntry.modified_at).toLocaleDateString('de-CH')} />
+          <InfoRow label={t('size')} value={formatBytes(selectedEntry.size)} />
+          <InfoRow label={t('type')} value={selectedEntry.mime_type} />
+          <InfoRow label={t('modified')} value={new Date(selectedEntry.modified_at).toLocaleDateString(getLang() === 'de' ? 'de-CH' : 'en-US')} />
           {selectedEntry.dimensions && (
-            <InfoRow label="Abmessungen" value={`${selectedEntry.dimensions[0]} × ${selectedEntry.dimensions[1]}`} />
+            <InfoRow label={t('dimensions')} value={`${selectedEntry.dimensions[0]} × ${selectedEntry.dimensions[1]}`} />
           )}
           {selectedEntry.classification && (
             <>
-              <div className="mt-4 mb-2 text-xs font-semibold text-[#8b949e] uppercase tracking-wider">Klassifizierung</div>
-              <InfoRow label="Kategorie" value={categoryLabel(selectedEntry.classification.category)} />
-              <InfoRow label="Konfidenz" value={`${(selectedEntry.classification.confidence * 100).toFixed(0)}%`} />
+              <div className="mt-4 mb-2 text-xs font-semibold text-[#8b949e] uppercase tracking-wider">{t('classification')}</div>
+              <InfoRow label={t('category')} value={categoryLabel(selectedEntry.classification.category)} />
+              <InfoRow label={t('confidence')} value={`${(selectedEntry.classification.confidence * 100).toFixed(0)}%`} />
               {selectedEntry.classification.extracted_date && (
-                <InfoRow label="Datum" value={selectedEntry.classification.extracted_date} />
+                <InfoRow label={t('date')} value={selectedEntry.classification.extracted_date} />
               )}
               {selectedEntry.classification.extracted_amount != null && (
-                <InfoRow label="Betrag" value={`${selectedEntry.classification.extracted_amount}`} />
+                <InfoRow label={t('amount')} value={`${selectedEntry.classification.extracted_amount}`} />
               )}
               {selectedEntry.classification.extracted_sender && (
-                <InfoRow label="Absender" value={selectedEntry.classification.extracted_sender} />
+                <InfoRow label={t('sender')} value={selectedEntry.classification.extracted_sender} />
               )}
               {selectedEntry.classification.ai_summary && (
                 <div className="mt-2 text-xs text-[#8b949e] italic">{selectedEntry.classification.ai_summary}</div>
               )}
               {selectedEntry.tags.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {selectedEntry.tags.map(t => (
-                    <span key={t} className="text-xs px-1.5 py-0.5 rounded-full bg-[#21262d] text-[#8b949e]">{t}</span>
+                  {selectedEntry.tags.map(tag => (
+                    <span key={tag} className="text-xs px-1.5 py-0.5 rounded-full bg-[#21262d] text-[#8b949e]">{tag}</span>
                   ))}
                 </div>
               )}

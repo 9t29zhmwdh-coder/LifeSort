@@ -7,6 +7,7 @@ use ls_core::db;
 use state::{AppSettings, AppState};
 use std::{collections::HashMap, sync::Arc};
 use tauri::Manager;
+use tauri::async_runtime;
 use tokio::sync::RwLock;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,8 +23,7 @@ pub fn run() {
                 .expect("no app data dir");
             let db_path = data_dir.join("lifesort.db");
 
-            let rt = tokio::runtime::Handle::current();
-            let pool = rt.block_on(db::open(&db_path)).expect("DB init failed");
+            let pool = async_runtime::block_on(db::open(&db_path)).expect("DB init failed");
 
             let app_state = Arc::new(AppState {
                 pool,
