@@ -22,4 +22,6 @@
 ## v1.0.0 — Target
 - [ ] Windows & Linux support
 - [ ] Full test coverage
-- [ ] Localization (EN/DE)
+
+## Under Consideration
+- [ ] Optional intake from [CleanFlow](https://github.com/9t29zhmwdh-coder/CleanFlow): CleanFlow handles one-off cleanup (junk, duplicates, trash), LifeSort handles ongoing archival sorting. A CLI pipeline could feed files CleanFlow keeps but doesn't sort straight into LifeSort's classifier instead of leaving them in place. Not scoped yet.
