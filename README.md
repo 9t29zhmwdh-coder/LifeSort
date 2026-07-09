@@ -43,6 +43,8 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 - [Ollama](https://ollama.ai): `ollama pull llama3 && ollama pull llava`
 - macOS / Windows / Linux
 
+> 🌱 New here? → [Step-by-step guide for beginners](GETTING_STARTED.md)
+
 ---
 
 ## Quick Start
