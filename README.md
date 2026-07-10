@@ -20,6 +20,10 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 
 ---
 
+> 🌱 New here? → [Step-by-step guide for beginners](GETTING_STARTED.md)
+
+---
+
 ## Features
 
 | Feature | Description |
@@ -42,8 +46,6 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 - [Tauri CLI v2](https://tauri.app/): `cargo install tauri-cli`
 - [Ollama](https://ollama.ai): `ollama pull llama3 && ollama pull llava`
 - macOS / Windows / Linux
-
-> 🌱 New here? → [Step-by-step guide for beginners](GETTING_STARTED.md)
 
 ---
 
