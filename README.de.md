@@ -22,6 +22,10 @@ LifeSort erkennt, klassifiziert, taggt und sortiert Dateien, Fotos, PDFs und Dok
 
 ---
 
+> 🌱 Neu hier? → [Schritt-für-Schritt-Anleitung für Einsteiger](GETTING_STARTED.md)
+
+---
+
 ## Funktionen
 
 | Funktion | Beschreibung |
