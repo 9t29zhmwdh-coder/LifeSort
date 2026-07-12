@@ -22,6 +22,8 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 
 ---
 
+LifeSort's UI is available in English (default) and German; switch anytime with the language toggle.
+
 **In practice:** you scan a folder once, LifeSort classifies every file locally with Ollama, and you get a clean overview with sort suggestions you confirm before anything moves. AI only assists with recognition, tagging, and summaries; the underlying scan, hash, and move logic works without it.
 
 ---

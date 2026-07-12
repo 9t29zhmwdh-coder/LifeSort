@@ -24,6 +24,8 @@ LifeSort erkennt, klassifiziert, taggt und sortiert Dateien, Fotos, PDFs und Dok
 
 ---
 
+Die Oberfläche von LifeSort ist auf Englisch (Standard) und Deutsch verfügbar; umschaltbar über den Sprachtoggle.
+
 **In der Praxis:** du scannst einmal einen Ordner, LifeSort klassifiziert jede Datei lokal mit Ollama, und du erhältst eine übersichtliche Ansicht mit Sortier-Vorschlägen, die du vor jeder Verschiebung bestätigst. KI unterstützt nur bei Erkennung, Tagging und Zusammenfassungen; die zugrunde liegende Scan-, Hash- und Verschiebe-Logik funktioniert auch ohne sie.
 
 ---
