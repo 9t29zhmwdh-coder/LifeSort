@@ -65,12 +65,12 @@ impl Category {
 
     pub fn display_name(&self) -> &'static str {
         match self {
-            Category::PhotoPerson    => "Foto — Person",
-            Category::PhotoLandscape => "Foto — Ort/Landschaft",
-            Category::PhotoEvent     => "Foto — Ereignis",
+            Category::PhotoPerson    => "Foto: Person",
+            Category::PhotoLandscape => "Foto: Ort/Landschaft",
+            Category::PhotoEvent     => "Foto: Ereignis",
             Category::PhotoScreenshot => "Screenshot",
             Category::PhotoMeme      => "Meme",
-            Category::PhotoDocument  => "Foto — Dokument",
+            Category::PhotoDocument  => "Foto: Dokument",
             Category::Invoice        => "Rechnung",
             Category::Contract       => "Vertrag",
             Category::Guarantee      => "Garantie",

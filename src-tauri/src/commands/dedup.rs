@@ -14,7 +14,7 @@ pub async fn find_duplicates(
     let sid = session_id.clone();
     let app_clone = app.clone();
 
-    // Hash computation is CPU-bound — run in blocking thread
+    // Hash computation is CPU-bound; run in blocking thread
     let groups = tokio::task::spawn_blocking(move || {
         let rt = tokio::runtime::Handle::current();
         let mut entries = rt.block_on(async {

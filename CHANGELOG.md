@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.7] - 2026-07-12
+
+### Fixed
+
+- Removed em-dashes/en-dashes across ARCHITECTURE.md, CONTRIBUTING.md, and several Rust source comments/string literals (Swiss German orthography rule).
+- Removed stale scaffold-tool bookkeeping files SKELETON.md and TEMPLATE_NOTES.md.
+
 ## [0.2.6] - 2026-07-12
 
 ### Security

@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use uuid::Uuid;
 
 #[derive(Parser)]
-#[command(name = "lifesort", about = "LifeSort — AI File Organizer CLI")]
+#[command(name = "lifesort", about = "LifeSort: AI File Organizer CLI")]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,

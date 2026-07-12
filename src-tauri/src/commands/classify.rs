@@ -92,7 +92,7 @@ pub async fn classify_batch(
     Ok(total)
 }
 
-// Local helper — avoids passing Arc<AppState> into spawned task
+// Local helper; avoids passing Arc<AppState> into spawned task
 struct OllamaLocal(ls_core::ai::ollama::OllamaBackend);
 impl OllamaLocal {
     async fn new_from_state_async() -> ls_core::ai::ollama::OllamaBackend {

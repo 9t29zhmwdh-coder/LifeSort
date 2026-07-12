@@ -2509,7 +2509,7 @@ dependencies = [
 
 [[package]]
 name = "lifesort-tauri"
-version = "0.2.4"
+version = "0.2.6"
 dependencies = [
  "anyhow",
  "dirs 5.0.1",
@@ -2590,7 +2590,7 @@ dependencies = [
 
 [[package]]
 name = "ls-cli"
-version = "0.2.4"
+version = "0.2.6"
 dependencies = [
  "anyhow",
  "clap",
@@ -2603,7 +2603,7 @@ dependencies = [
 
 [[package]]
 name = "ls-core"
-version = "0.2.4"
+version = "0.2.6"
 dependencies = [
  "anyhow",
  "async-trait",
