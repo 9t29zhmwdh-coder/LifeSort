@@ -46,7 +46,7 @@ impl Default for AppSettings {
 
 impl AppState {
     pub fn ollama(&self) -> OllamaBackend {
-        // blocking read — only called from async context with settings already known
+        // blocking read; only called from async context with settings already known
         let s = self.settings.try_read().ok();
         if let Some(s) = s {
             OllamaBackend::new(s.ollama_url.clone(), s.text_model.clone(), s.vision_model.clone())
