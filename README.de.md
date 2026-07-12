@@ -18,6 +18,12 @@ LifeSort erkennt, klassifiziert, taggt und sortiert Dateien, Fotos, PDFs und Dok
 
 ![LifeSort](docs/screenshot.de.png)
 
+---
+
+> 💾 **Download:** [macOS (DMG)](https://github.com/9t29zhmwdh-coder/LifeSort/releases/latest/download/LifeSort.dmg) · [Windows (Installer)](https://github.com/9t29zhmwdh-coder/LifeSort/releases/latest/download/LifeSort-Setup.exe) · [Linux (AppImage)](https://github.com/9t29zhmwdh-coder/LifeSort/releases/latest/download/LifeSort.AppImage): immer das neueste Release, nicht code-signiert/notarisiert (Gatekeeper/SmartScreen warnen beim ersten Start). Oder aus dem Quellcode bauen, siehe Erste Schritte unten.
+
+---
+
 **In der Praxis:** du scannst einmal einen Ordner, LifeSort klassifiziert jede Datei lokal mit Ollama, und du erhältst eine übersichtliche Ansicht mit Sortier-Vorschlägen, die du vor jeder Verschiebung bestätigst. KI unterstützt nur bei Erkennung, Tagging und Zusammenfassungen; die zugrunde liegende Scan-, Hash- und Verschiebe-Logik funktioniert auch ohne sie.
 
 ---

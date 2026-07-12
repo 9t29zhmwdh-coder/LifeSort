@@ -16,6 +16,12 @@ LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PD
 
 ![LifeSort](docs/screenshot.png)
 
+---
+
+> 💾 **Download:** [macOS (DMG)](https://github.com/9t29zhmwdh-coder/LifeSort/releases/latest/download/LifeSort.dmg) · [Windows (Installer)](https://github.com/9t29zhmwdh-coder/LifeSort/releases/latest/download/LifeSort-Setup.exe) · [Linux (AppImage)](https://github.com/9t29zhmwdh-coder/LifeSort/releases/latest/download/LifeSort.AppImage): always the latest release, not code-signed/notarized (Gatekeeper/SmartScreen will warn on first run). Or build from source, see Getting Started below.
+
+---
+
 **In practice:** you scan a folder once, LifeSort classifies every file locally with Ollama, and you get a clean overview with sort suggestions you confirm before anything moves. AI only assists with recognition, tagging, and summaries; the underlying scan, hash, and move logic works without it.
 
 ---
