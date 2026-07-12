@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.6] - 2026-07-12
+
+### Security
+
+- Rewrote SECURITY.md to the portfolio's current standard (GitHub Security Advisory reporting, 48h response target, Latest-only supported version; the previous version incorrectly said "0.1.x" was supported).
+- Documented a Dependabot-flagged advisory (glib, transitive via Tauri's Linux GTK bindings) as an accepted, time-boxed exception.
+
 ## [0.2.5] - 2026-07-12
 
 ### Added
