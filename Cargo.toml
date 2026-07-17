@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/ls-core", "crates/ls-cli", "src-tauri"]
 
 [workspace.package]
-version = "0.2.8"
+version = "0.2.9"
 edition = "2021"
 authors = ["Rafael Yilmaz <rafael.yilmaz@icloud.com>"]
 license = "MIT"
