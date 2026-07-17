@@ -52,7 +52,7 @@ LifeSort's UI is available in English (default) and German; switch anytime with 
 - [Rust](https://rustup.rs/) 1.77+
 - [Node.js](https://nodejs.org/) 20+
 - [Tauri CLI v2](https://tauri.app/): `cargo install tauri-cli`
-- [Ollama](https://ollama.ai): `ollama pull llama3 && ollama pull llava`
+- [Ollama](https://ollama.ai) (optional, for AI-assisted sorting): `ollama pull llama3 && ollama pull llava`
 - macOS / Windows / Linux
 
 ---

@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.9] - 2026-07-17
+
+### Changed
+
+- README/README.de: marked Ollama as "(optional, for AI-assisted
+  sorting)" — core scan/hash/dedup/move already work without it.
+
 ## [0.2.8] - 2026-07-13
 
 ### Added

@@ -54,7 +54,7 @@ Die Oberfläche von LifeSort ist auf Englisch (Standard) und Deutsch verfügbar;
 - [Rust](https://rustup.rs/) 1.77+
 - [Node.js](https://nodejs.org/) 20+
 - [Tauri CLI v2](https://tauri.app/): `cargo install tauri-cli`
-- [Ollama](https://ollama.ai): `ollama pull llama3 && ollama pull llava`
+- [Ollama](https://ollama.ai) (optional, für KI-gestützte Sortierung): `ollama pull llama3 && ollama pull llava`
 - macOS / Windows / Linux
 
 ---
