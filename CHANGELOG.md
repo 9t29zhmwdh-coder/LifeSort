@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.1] - 2026-07-20
+
+### Changed
+
+- OpenSSF Scorecard workflow and badge.
+- `copilot-instructions.md` for consistent AI-assisted contributions.
+- Coverage reporting in CI (cargo-tarpaulin).
+- Split the README's security/CI badges onto their own line, separate from the platform/tech/AI badges (they were rendering as a single merged line).
+
 ## [1.0.0] - 2026-07-18
 
 First stable release: a real, packaged, installable distribution exists
@@ -17,7 +26,7 @@ discipline.
 ### Changed
 
 - README/README.de: marked Ollama as "(optional, for AI-assisted
-  sorting)" — core scan/hash/dedup/move already work without it.
+  sorting)": core scan/hash/dedup/move already work without it.
 
 ## [0.2.8] - 2026-07-13
 
