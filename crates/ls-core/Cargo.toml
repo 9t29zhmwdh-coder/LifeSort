@@ -21,15 +21,15 @@ once_cell.workspace = true
 regex.workspace     = true
 dashmap.workspace   = true
 
-infer    = "0.16"
+infer    = "0.19"
 blake3   = "1"
 walkdir  = "2"
 rayon    = "1"
-base64   = "0.22"
+base64   = "0.23"
 image    = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif", "tiff"] }
 kamadak_exif = { package = "kamadak-exif", version = "0.5" }
-lopdf    = "0.42"
+lopdf    = "0.44"
 mime_guess = "2"
-notify              = "6"
-notify-debouncer-full = "0.3"
+notify              = "8"
+notify-debouncer-full = "0.7"
 async-trait = "0.1"
