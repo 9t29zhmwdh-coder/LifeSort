@@ -1,6 +1,6 @@
 {
   "productName": "LifeSort",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "identifier": "ch.raystudio.lifesort",
   "build": {
     "frontendDist": "../frontend/dist",
