@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.7] - 2026-07-29
+
+### Changed
+
+- Lock file updates for `serde_json`, `tokio`, `uuid`, `thiserror`, `anyhow` and `regex`. These are the compatible part of a grouped update that also carried eight breaking bumps. Splitting them out means the routine half can land on its own, and each breaking dependency gets reviewed for what it actually changes rather than waved through inside a pull request that reads as routine.
+
+---
+
 ## [1.0.6] - 2026-07-29
 
 ### Changed
