@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.12] - 2026-07-29
+
+### Changed
+
+- `sqlx` 0.8 to 0.9. This is the last of the eight breaking updates split out of the grouped cargo bump.
+
+### Added
+
+- A runtime test for the database layer. Every call site stayed type-correct across this bump, but a database library can change how migrations are applied or how SQLite values map back into Rust without any of that showing up at compile time. The test opens a fresh database through `db::open`, checks that sqlx recorded applied migrations, and opens it a second time to confirm reopening is a no-op rather than an error, which is what every start after the first one does. It passes against both 0.8 and 0.9, so it measures the behaviour rather than the version.
+
+---
+
 ## [1.0.11] - 2026-07-29
 
 ### Changed
