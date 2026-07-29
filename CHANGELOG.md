@@ -10,6 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - `notify` 6 to 8, together with `notify-debouncer-full` 0.3 to 0.6. The two move as a pair: the debouncer wraps a watcher from `notify`, so a version of it that matches `notify` 8 is required and cannot be chosen independently.
+- The watcher struct names `RecommendedCache` instead of `FileIdMap`. The cache type `new_debouncer` returns is chosen per platform, so naming one of them concretely compiles only on the platform where that choice happens to match. It built on macOS and failed on the Linux coverage runner with `expected Debouncer<INotifyWatcher, FileIdMap>, found Debouncer<INotifyWatcher, NoCache>`.
 - The file watcher registers its path directly on the debouncer. `Debouncer::watcher()` is deprecated in 0.6 and no longer returns a watcher that `watch` can be called on, so `debouncer.watcher().watch(path, ...)` becomes `debouncer.watch(path, ...)`. This is the only source change among the eight breaking updates split out of the grouped cargo bump.
 
 ---
