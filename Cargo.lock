@@ -2417,16 +2417,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "keyring"
-version = "3.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eebcc3aff044e5944a8fbaf69eb277d11986064cba30c468730e8b9909fb551c"
-dependencies = [
- "log",
- "zeroize",
-]
-
-[[package]]
 name = "kqueue"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2535,11 +2525,10 @@ dependencies = [
 
 [[package]]
 name = "lifesort-tauri"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "anyhow",
  "dirs",
- "keyring",
  "ls-core",
  "serde",
  "serde_json",
@@ -2615,7 +2604,7 @@ dependencies = [
 
 [[package]]
 name = "ls-cli"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "anyhow",
  "clap",
@@ -2628,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "ls-core"
-version = "1.0.7"
+version = "1.0.8"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2640,7 +2629,6 @@ dependencies = [
  "image",
  "infer",
  "kamadak-exif",
- "keyring",
  "lopdf",
  "mime_guess",
  "notify",
