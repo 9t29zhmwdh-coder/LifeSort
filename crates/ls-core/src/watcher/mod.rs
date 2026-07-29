@@ -33,7 +33,7 @@ impl FileWatcher {
         });
 
         let mut debouncer = new_debouncer(Duration::from_secs(2), None, debouncer_tx)?;
-        debouncer.watcher().watch(path, RecursiveMode::Recursive)?;
+        debouncer.watch(path, RecursiveMode::Recursive)?;
 
         Ok(Self { _debouncer: debouncer })
     }
