@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.10] - 2026-07-29
+
+### Changed
+
+- `reqwest` 0.12 to 0.13, with `rustls` named explicitly in the feature list.
+
+### Security
+
+- The TLS backend changes here, not only the certificate roots. This crate named no TLS feature and lived on the defaults, which meant native-tls under 0.12; in 0.13 `default-tls` points at `rustls`. Naming `rustls` in the manifest makes that switch visible instead of letting it happen silently through a changed default.
+- TLS now trusts the operating system's certificate store: the `rustls` feature in 0.13 pulls in `rustls-platform-verifier`. A machine that trusts an internal certificate authority works without extra configuration, and the trust decision moves onto the machine the tool runs on.
+- The rustls crypto provider is `aws-lc-rs`, which is what the `rustls` feature selects in 0.13.
+
+---
+
 ## [1.0.9] - 2026-07-29
 
 ### Removed
