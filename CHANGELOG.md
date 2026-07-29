@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.9] - 2026-07-29
+
+### Changed
+
+- `keyring` 3 to 4. The crate is declared in the workspace and pulled into both `ls-core` and the Tauri app, but no Rust file references it: LifeSort talks to a local Ollama instance and holds no API key that would need a credential store. The bump is therefore safe by inspection rather than by testing, since there is no call site whose behaviour could change. Whether the dependency should stay at all is a separate question, noted here rather than decided inside a dependency update.
+
+---
+
 ## [1.0.8] - 2026-07-29
 
 ### Changed
