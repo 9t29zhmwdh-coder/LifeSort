@@ -16,7 +16,6 @@ tracing.workspace   = true
 reqwest.workspace   = true
 sqlx.workspace      = true
 dirs.workspace      = true
-keyring.workspace   = true
 once_cell.workspace = true
 regex.workspace     = true
 dashmap.workspace   = true

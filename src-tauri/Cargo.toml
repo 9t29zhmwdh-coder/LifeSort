@@ -21,7 +21,6 @@ thiserror.workspace = true
 tracing.workspace   = true
 tracing-subscriber  = "0.3"
 dirs.workspace      = true
-keyring.workspace   = true
 uuid.workspace      = true
 sqlx.workspace      = true
 

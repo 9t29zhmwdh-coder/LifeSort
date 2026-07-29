@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.9] - 2026-07-29
+
+### Removed
+
+- `keyring` as a dependency. It was declared in the workspace and pulled into both `ls-core` and the Tauri app, but no file outside those three manifests ever referenced it. LifeSort talks to a local Ollama instance and holds no API key that would need a credential store.
+- It could not have worked as one either. `keyring` 3 ships no default features, and the declaration named none, so no platform backend was compiled in. Anyone wiring it up in that state would have got a store that silently persists nothing. Removing it is therefore better than the bump to 4 it was scheduled for: an unused dependency that cannot do its job still enlarges the dependency surface and the SBOM, and still has to be reviewed on every advisory.
+
+---
+
 ## [1.0.8] - 2026-07-29
 
 ### Changed
