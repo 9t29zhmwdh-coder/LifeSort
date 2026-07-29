@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.8] - 2026-07-29
+
+### Changed
+
+- `base64` 0.22 to 0.23, `dirs` 5 to 6, `infer` 0.16 to 0.19 and `lopdf` 0.42 to 0.44. All four cross a major boundary but need no change in this codebase: the parts of their APIs used here did not move. They are grouped because that is exactly what they have in common, and separating them further would suggest a difference that is not there.
+
+---
+
 ## [1.0.7] - 2026-07-29
 
 ### Changed
