@@ -1,14 +1,16 @@
 #![allow(unused_imports)]
 use anyhow::Result;
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
-use notify_debouncer_full::{new_debouncer, DebounceEventResult, Debouncer, FileIdMap};
+use notify_debouncer_full::{new_debouncer, DebounceEventResult, Debouncer, RecommendedCache};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
 
 pub struct FileWatcher {
-    _debouncer: Debouncer<RecommendedWatcher, FileIdMap>,
+    // RecommendedCache, not FileIdMap: the cache type new_debouncer returns
+    // differs per platform, and naming one of them compiles only there.
+    _debouncer: Debouncer<RecommendedWatcher, RecommendedCache>,
 }
 
 impl FileWatcher {
@@ -33,7 +35,7 @@ impl FileWatcher {
         });
 
         let mut debouncer = new_debouncer(Duration::from_secs(2), None, debouncer_tx)?;
-        debouncer.watcher().watch(path, RecursiveMode::Recursive)?;
+        debouncer.watch(path, RecursiveMode::Recursive)?;
 
         Ok(Self { _debouncer: debouncer })
     }
