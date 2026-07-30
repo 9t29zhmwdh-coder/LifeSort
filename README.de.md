@@ -6,9 +6,20 @@
 
 [🇬🇧 English Version](README.md)
 
-**KI-gestützter lokaler Datei-Organizer. Offline, privat, plattformübergreifend, entwickelt mit Rust und Tauri.**
+**Sortiert den Haufen, bei dem die Dateinamen nichts verraten.**
 
-LifeSort erkennt, klassifiziert, taggt und sortiert Dateien, Fotos, PDFs und Dokumente automatisch in eine übersichtliche Ordnerstruktur; **vollständig offline**, mit lokalen KI-Modellen. Keine Cloud, kein Tracking, kein manuelles Sortieren.
+`IMG_4471.jpg`, `Scan_002.pdf`, `Download (3).pdf`. LifeSort öffnet sie und
+sortiert nach dem, was tatsächlich drin ist: ein Vision-Modell schaut sich die
+Fotos an, ein Textmodell liest die Dokumente. Beide laufen auf deinem Gerät.
+
+**Nichts für dich, wenn** deine Dateien schon vernünftig heissen und eine Regel
+wie "PDFs nach Dokumente" reichen würde. Das ist Aufgabe einer Regel-Engine, und
+[CleanFlow](https://github.com/9t29zhmwdh-coder/CleanFlow) ist die in diesem
+Portfolio: es plant nach Regeln, zeigt dir den Plan vorher und führt über jede
+Aktion Buch, damit du sie zurückdrehen kannst. LifeSort ist für den Fall, wo
+keine Regel hilft, weil der Dateiname nichts sagt.
+
+Nichts wird ohne deine Bestätigung verschoben, und nichts verlässt das Gerät.
 
 [![CI](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/LifeSort/actions) [![CodeQL](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/LifeSort/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/9t29zhmwdh-coder/LifeSort/badge)](https://securityscorecards.dev/viewer/?uri=github.com/9t29zhmwdh-coder/LifeSort) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13699/badge)](https://www.bestpractices.dev/projects/13699)
 

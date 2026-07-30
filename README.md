@@ -6,9 +6,20 @@
 
 [🇩🇪 Deutsche Version](README.de.md)
 
-**AI-powered local file organizer. Offline, private, cross-platform, built with Rust and Tauri.**
+**Sorts the pile where the filenames tell you nothing.**
 
-LifeSort automatically recognizes, classifies, tags, and sorts files, photos, PDFs, and documents into a clean folder structure; **fully offline**, using local AI models. No cloud, no tracking, no manual sorting.
+`IMG_4471.jpg`, `Scan_002.pdf`, `Download (3).pdf`. LifeSort opens them and
+sorts by what is actually inside: a vision model looks at the photos, a text
+model reads the documents. Both run on your machine.
+
+**Not for you if** your files are already named sensibly and a rule like "PDFs
+into Documents" would do. That is a rule engine's job, and
+[CleanFlow](https://github.com/9t29zhmwdh-coder/CleanFlow) is the one in this
+portfolio: it plans by rule, shows you the plan, and journals every action so
+you can undo it. LifeSort is for the case where no rule helps because the
+filename says nothing.
+
+Nothing is moved without your confirmation, and nothing leaves the machine.
 
 [![CI](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/LifeSort/actions) [![CodeQL](https://github.com/9t29zhmwdh-coder/LifeSort/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/LifeSort/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/9t29zhmwdh-coder/LifeSort/badge)](https://securityscorecards.dev/viewer/?uri=github.com/9t29zhmwdh-coder/LifeSort) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13699/badge)](https://www.bestpractices.dev/projects/13699)
 
