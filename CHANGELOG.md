@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.14] - 2026-07-30
+
+### Changed
+
+- The README opens with what the tool is for instead of what it is built with. Both language versions previously began "AI-powered file organizer", the same phrase CleanFlow used, so a reader looking at both could not tell which one to pick. The repository description is rewritten for the same reason.
+- The opening now names the case this tool is **not** for and links to CleanFlow by name. The exclusion is the sentence that saves the wrong reader ten minutes, and between two tools that sound alike it is worth more than any feature list.
+
+---
+
 ## [1.0.13] - 2026-07-29
 
 ### Security
