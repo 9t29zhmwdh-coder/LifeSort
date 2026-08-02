@@ -30,7 +30,7 @@ kamadak_exif = { package = "kamadak-exif", version = "0.5" }
 lopdf    = "0.44"
 mime_guess = "2"
 notify              = "8"
-notify-debouncer-full = "0.6"
+notify-debouncer-full = "0.7"
 async-trait = "0.1"
 
 [dev-dependencies]
