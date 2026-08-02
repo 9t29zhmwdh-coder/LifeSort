@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.16] - 2026-08-02
+
+### Changed
+
+- `notify-debouncer-full` 0.6.0 to 0.7.0, merged since 1.0.15 and carried by this version. The watcher here re-reads on any debounced event rather than filtering by kind, so the Windows defect found in LogLens does not apply.
+
+---
+
 ## [1.0.15] - 2026-07-31
 
 ### Fixed
