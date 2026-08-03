@@ -43,7 +43,7 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen bg-[#0d1117] text-[#e6edf3]">
       {/* Top bar */}
-      <header className="flex items-center gap-4 px-5 py-3 border-b border-[#30363d] flex-shrink-0">
+      <header className="flex items-center gap-4 px-5 py-3 border-b border-[#30363d] shrink-0">
         <div>
           <span className="text-base font-bold text-[#58a6ff]">LifeSort</span>
           <span className="text-xs text-[#8b949e] ml-2">AI File Organizer</span>
@@ -63,7 +63,7 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <button onClick={toggleLang} className="ml-auto text-xs text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded hover:bg-[#21262d]">
+        <button onClick={toggleLang} className="ml-auto text-xs text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded-sm hover:bg-[#21262d]">
           {lang === 'en' ? 'DE' : 'EN'}
         </button>
         <OllamaStatus />
