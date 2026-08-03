@@ -155,7 +155,7 @@ function ActionRow({
       {isApplied && action.undoable && (
         <button
           onClick={onUndo}
-          className="flex-shrink-0 text-xs text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded hover:bg-[#21262d]"
+          className="shrink-0 text-xs text-[#8b949e] hover:text-[#e6edf3] px-2 py-1 rounded-sm hover:bg-[#21262d]"
         >
           {t('undo')}
         </button>

@@ -45,7 +45,7 @@ export function FileGrid() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1 text-sm text-[#e6edf3] focus:outline-none focus:border-[#58a6ff] w-48"
+            className="bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1 text-sm text-[#e6edf3] focus:outline-hidden focus:border-[#58a6ff] w-48"
           />
           <div className="flex gap-1 flex-wrap">
             <Chip active={filterKind === 'all'} onClick={() => setFilterKind('all')}>{t('all')}</Chip>
@@ -108,7 +108,7 @@ export function FileGrid() {
 
       {/* Inspector panel */}
       {selectedEntry && (
-        <aside className="w-72 flex-shrink-0 border-l border-[#30363d] p-4 overflow-y-auto">
+        <aside className="w-72 shrink-0 border-l border-[#30363d] p-4 overflow-y-auto">
           <div className="text-3xl mb-3">{kindIcon(selectedEntry.kind)}</div>
           <div className="text-sm font-semibold text-[#e6edf3] break-all mb-1">{selectedEntry.name}</div>
           <div className="text-xs text-[#8b949e] mb-4 break-all">{selectedEntry.path}</div>
