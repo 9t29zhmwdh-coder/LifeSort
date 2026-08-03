@@ -5,6 +5,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] - 2026-08-03
+
+### Changed
+
+- `infer` 0.19 to 0.22. The detected MIME type decides which folder a file is sorted into, so this one is checked by tests rather than by a green build: PNG, JPEG, PDF and ZIP still resolve to the same types through magic bytes, and files without a signature still fall back to the extension.
+- `recharts` 2 to 3, a real major that this repository actually uses. The dashboard pie chart was rendered in a real DOM under both versions with the same data and produced the same four segments and two labels. The bundle dropped from 596 kB to 553 kB.
+- The cargo group: `async-trait` 0.1.89 to 0.1.91, `clap` 4.6.1 to 4.6.5, `tauri-plugin-dialog` 2.7.1 to 2.7.2.
+- `vite` 8.1.5 to 8.2.0 and `@vitejs/plugin-react` 6.0.4 to 6.0.5.
+- `github/codeql-action` 4.37.3 to 4.37.4 and `actions/attest` 4.2.0 to 4.2.1, merged separately and carried by this version.
+
+### Added
+
+- Two tests over MIME detection: four magic-byte signatures through `infer`, and the extension fallback for files without one. A version that reports a different type, or none, would sort files into the wrong folder without any crash or build failure.
+
+---
+
+## [1.1.1] - 2026-08-03
+
+### Fixed
+
+- Corrects a claim in the 1.1.0 entry. It said that leaving `rounded` in place would have halved every corner radius, because version 4 shifted the scale. That is wrong. Measured directly under Tailwind 4.3.3: `rounded` is still 0.25rem and is kept as an alias. The scale did shift, but under the name `rounded-sm`, which now means 0.25rem where it meant 0.125rem before. The dangerous case is source that already used `rounded-sm`, and this repository never did, so the rename changed nothing visually. The migration itself was correct; the reason given for it was not.
+
+---
+
+## [1.1.0] - 2026-08-03
+
+### Changed
+
+- Tailwind CSS 3 to 4. `tailwind.config.ts` is gone; the custom colours and the mono stack are theme variables in the stylesheet now, and PostCSS uses `@tailwindcss/postcss`.
+- Three utility renames went through five components: `rounded` to `rounded-sm` six times, `outline-none` to `outline-hidden` three times, `flex-shrink-0` to `shrink-0` five times. The first one matters most, because version 4 shifted the radius scale by one step and the old name now means half as much.
+- autoprefixer is no longer a dependency. Built once with it and once without, the stylesheet comes out with the same content hash, so it was contributing nothing.
+
+---
+
+## [1.0.17] - 2026-08-02
+
+### Changed
+
+- React 18 to 19, together with `react-dom` and both type packages. Dependabot had split these across separate pull requests and neither could be merged alone: `@types/react-dom` 18 requires `@types/react` 18, so raising either one left npm unable to resolve the peer dependency. All four move together here.
+- No code changes were needed, checked against the list of things React 19 removes rather than assumed: `createRoot` is already in use, and there are no string refs, no `propTypes`, no argument-less `useRef`, no `forwardRef`, no `defaultProps` and no callback refs. Typecheck and production build both clean.
+
+---
+
+## [1.0.16] - 2026-08-02
+
+### Changed
+
+- `notify-debouncer-full` 0.6.0 to 0.7.0, merged since 1.0.15 and carried by this version. The watcher here re-reads on any debounced event rather than filtering by kind, so the Windows defect found in LogLens does not apply.
+
+---
+
 ## [1.0.15] - 2026-07-31
 
 ### Fixed
