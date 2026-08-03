@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] - 2026-08-03
+
+### Changed
+
+- `infer` 0.19 to 0.22. The detected MIME type decides which folder a file is sorted into, so this one is checked by tests rather than by a green build: PNG, JPEG, PDF and ZIP still resolve to the same types through magic bytes, and files without a signature still fall back to the extension.
+- `recharts` 2 to 3, a real major that this repository actually uses. The dashboard pie chart was rendered in a real DOM under both versions with the same data and produced the same four segments and two labels. The bundle dropped from 596 kB to 553 kB.
+- The cargo group: `async-trait` 0.1.89 to 0.1.91, `clap` 4.6.1 to 4.6.5, `tauri-plugin-dialog` 2.7.1 to 2.7.2.
+- `vite` 8.1.5 to 8.2.0 and `@vitejs/plugin-react` 6.0.4 to 6.0.5.
+- `github/codeql-action` 4.37.3 to 4.37.4 and `actions/attest` 4.2.0 to 4.2.1, merged separately and carried by this version.
+
+### Added
+
+- Two tests over MIME detection: four magic-byte signatures through `infer`, and the extension fallback for files without one. A version that reports a different type, or none, would sort files into the wrong folder without any crash or build failure.
+
+---
+
 ## [1.1.1] - 2026-08-03
 
 ### Fixed
