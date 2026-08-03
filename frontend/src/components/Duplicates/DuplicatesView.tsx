@@ -72,7 +72,7 @@ export function DuplicatesView() {
               {group.file_ids.map(fileId => {
                 const entry = getEntry(fileId)
                 return (
-                  <div key={fileId} className="flex items-center gap-3 bg-[#0d1117] rounded p-2">
+                  <div key={fileId} className="flex items-center gap-3 bg-[#0d1117] rounded-sm p-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-[#e6edf3] truncate">{entry?.name ?? fileId}</div>
                       <div className="text-xs text-[#8b949e] truncate">{entry?.path}</div>
@@ -85,7 +85,7 @@ export function DuplicatesView() {
                     <button
                       onClick={() => handleResolve(group.id, fileId)}
                       disabled={resolving === group.id}
-                      className="flex-shrink-0 px-3 py-1 text-xs bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white rounded transition-colors"
+                      className="shrink-0 px-3 py-1 text-xs bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white rounded-sm transition-colors"
                     >
                       Behalten
                     </button>

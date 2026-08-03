@@ -49,7 +49,7 @@ export function SettingsView() {
         <button
           onClick={handleCheckOllama}
           disabled={checking}
-          className="mt-2 px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] rounded transition-colors"
+          className="mt-2 px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] rounded-sm transition-colors"
         >
           {checking ? t('testing') : t('testConnection')}
         </button>
@@ -66,11 +66,11 @@ export function SettingsView() {
           <input
             value={draft.target_root}
             onChange={e => set('target_root', e.target.value)}
-            className="flex-1 bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-1.5 text-sm text-[#e6edf3] font-mono focus:outline-none focus:border-[#58a6ff]"
+            className="flex-1 bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-1.5 text-sm text-[#e6edf3] font-mono focus:outline-hidden focus:border-[#58a6ff]"
           />
           <button
             onClick={handlePickFolder}
-            className="px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] rounded transition-colors"
+            className="px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] rounded-sm transition-colors"
           >
             {t('choose')}
           </button>
@@ -133,7 +133,7 @@ function Input({ value, onChange, placeholder }: { value: string; onChange: (v: 
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-1.5 text-sm text-[#e6edf3] font-mono focus:outline-none focus:border-[#58a6ff] mb-3 placeholder-[#484f58]"
+      className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-1.5 text-sm text-[#e6edf3] font-mono focus:outline-hidden focus:border-[#58a6ff] mb-3 placeholder-[#484f58]"
     />
   )
 }
@@ -144,7 +144,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
       <span className="text-sm text-[#c9d1d9]">{label}</span>
       <button
         onClick={() => onChange(!value)}
-        className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${value ? 'bg-[#238636]' : 'bg-[#30363d]'}`}
+        className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${value ? 'bg-[#238636]' : 'bg-[#30363d]'}`}
       >
         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${value ? 'left-5' : 'left-0.5'}`} />
       </button>
