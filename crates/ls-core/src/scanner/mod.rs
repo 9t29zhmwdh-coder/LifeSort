@@ -130,3 +130,59 @@ fn detect_mime(path: &Path, ext: Option<&str>) -> String {
         .map(|m| m.to_string())
         .unwrap_or_else(|| "application/octet-stream".to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    fn schreibe(name: &str, inhalt: &[u8]) -> std::path::PathBuf {
+        let verzeichnis = std::env::temp_dir().join(format!("ls-mime-{}", std::process::id()));
+        std::fs::create_dir_all(&verzeichnis).unwrap();
+        let pfad = verzeichnis.join(name);
+        std::fs::File::create(&pfad).unwrap().write_all(inhalt).unwrap();
+        pfad
+    }
+
+    /// Haelt fest, welchen MIME-Typ `infer` aus den Magic Bytes ableitet.
+    ///
+    /// Dieser Wert entscheidet, in welchen Ordner eine Datei einsortiert wird.
+    /// Meldet eine neue Version einen anderen Typ oder gar keinen mehr, landen
+    /// Dateien am falschen Ort. Das ist kein Absturz und faellt beim Bauen
+    /// nicht auf, sondern erst, wenn jemand seine Bilder sucht.
+    #[test]
+    fn magic_bytes_ergeben_denselben_mime_typ() {
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        let png = schreibe(
+            "probe.png",
+            &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13],
+        );
+        assert_eq!(detect_mime(&png, Some("png")), "image/png");
+
+        // JPEG: FF D8 FF
+        let jpg = schreibe("probe.jpg", &[0xFF, 0xD8, 0xFF, 0xE0, 0, 16, 0x4A, 0x46]);
+        assert_eq!(detect_mime(&jpg, Some("jpg")), "image/jpeg");
+
+        // PDF: %PDF-
+        let pdf = schreibe("probe.pdf", b"%PDF-1.7\n%\xE2\xE3\xCF\xD3\n");
+        assert_eq!(detect_mime(&pdf, Some("pdf")), "application/pdf");
+
+        // ZIP: PK\x03\x04
+        let zip = schreibe("probe.zip", &[0x50, 0x4B, 0x03, 0x04, 0, 0, 0, 0]);
+        assert_eq!(detect_mime(&zip, Some("zip")), "application/zip");
+    }
+
+    /// Ohne erkennbare Magic Bytes greift die Endung. Auch dieser Weg muss
+    /// erhalten bleiben, sonst bekommt jede Textdatei den Sammeltyp.
+    #[test]
+    fn ohne_magic_bytes_entscheidet_die_endung() {
+        let txt = schreibe("probe.txt", b"nur Text, keine Signatur\n");
+        assert_eq!(detect_mime(&txt, Some("txt")), "text/plain");
+
+        let unbekannt = schreibe("probe.xyzzy", b"weder Signatur noch bekannte Endung\n");
+        assert_eq!(
+            detect_mime(&unbekannt, Some("xyzzy")),
+            "application/octet-stream"
+        );
+    }
+}
