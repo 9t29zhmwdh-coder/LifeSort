@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.3] - 2026-08-05
+
+### Changed
+
+- TypeScript 5.9.3 to 7. No source change was needed. The production build runs `tsc` ahead of vite, so the typecheck has to pass for anything to be produced at all, and the output comes out with the same content hashes as before.
+
+---
+
 ## [1.2.2] - 2026-08-05
 
 ### Changed
