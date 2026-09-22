@@ -29,6 +29,10 @@ This release makes the app do what the README says, and changes the README where
 - Building from a fresh clone failed: the `sqlx` query macros needed a prepared database through `DATABASE_URL`. The queries now run without it, and CI no longer installs `sqlx-cli`.
 - The release profile sat in `src-tauri/Cargo.toml`, where cargo ignores it. It now applies, without stripping build-time libraries, which breaks proc macros on macOS.
 
+### Security
+
+- `rustls` 0.23.41 to 0.23.45, closing RUSTSEC-2026-0285, TLS 1.3 handshake messages accepted across encryption level boundaries. `rustls` arrives through `reqwest`; the fix needs newer `aws-lc-rs`, `aws-lc-sys` and `rustls-webpki`, which moved with it. Nothing else in the lockfile changed. LifeSort itself talks plain HTTP to a local Ollama, so the TLS code is only reached if an HTTPS address is configured.
+
 ### Changed
 
 - Default model `qwen3.5:4b-mlx` on macOS and `qwen3.5:4b` elsewhere, one model for photos and documents. Chosen by measurement: 92 % of 48 photos and 93 % of 14 documents at 4.1 GB. The old defaults `llava` and `llama3` reached 75 % on the photos. The README has the full table and a recommendation per Mac memory size.
