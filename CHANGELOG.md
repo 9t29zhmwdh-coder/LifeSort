@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.1] - 2026-09-22
+
+### Changed
+
+- New screenshots in both READMEs, taken from 1.3.0 with the default model: a folder of freely licensed photos with camera-style names, classified by `qwen3.5:4b-mlx`, one duplicate found. The old screenshots showed an interface that no longer exists.
+- `docs/benchmark/fetch_images.py` retries throttled downloads and skips an image instead of writing an empty file. An empty file was silently left behind when Wikimedia answered with HTTP 429.
+
+---
+
 ## [1.3.0] - 2026-09-22
 
 This release makes the app do what the README says, and changes the README where the app could not. Every claim below was checked in the running app, against a stand-in Ollama server in the tests, or with real models in the new benchmark.
