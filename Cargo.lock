@@ -2463,7 +2463,6 @@ name = "lifesort-tauri"
 version = "1.2.4"
 dependencies = [
  "anyhow",
- "chrono",
  "dirs",
  "ls-core",
  "serde",

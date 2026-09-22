@@ -105,8 +105,11 @@ jobs:
         run: npm ci && npm run build
         working-directory: frontend
 
+      # custom-protocol embeds frontend/dist. Without it a debug build waits
+      # for the Vite dev server and shows an empty window, which a process
+      # liveness check cannot tell apart from a working app.
       - name: Build the application binary
-        run: cargo build --bin lifesort-tauri
+        run: cargo build --bin lifesort-tauri --features tauri/custom-protocol
 
       - name: Start it and see whether it stays up
         shell: bash

@@ -25,13 +25,5 @@ uuid.workspace      = true
 sqlx.workspace      = true
 
 tauri         = { version = "2", features = [] }
-tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
-tauri-plugin-fs    = "2"
-
-[profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
+trash              = "5"
