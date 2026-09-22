@@ -66,7 +66,7 @@ fn resource_bytes(asset: &PHAsset) -> u64 {
             }
             // Through key-value coding, which boxes the value in an NSNumber
             // whatever integer type the private getter has.
-            unsafe { r.valueForKey(ns_string!("fileSize")) }
+            r.valueForKey(ns_string!("fileSize"))
                 .and_then(|v| v.downcast::<NSNumber>().ok())
                 .map(|n| n.unsignedLongLongValue())
                 .unwrap_or(0)
