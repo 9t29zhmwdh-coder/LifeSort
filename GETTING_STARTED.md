@@ -21,7 +21,7 @@ node --version
 cargo tauri --version
 ```
 
-If any command prints back a version number (e.g. `rustc 1.77.0`), you're good. If instead you see something like `'rustc' is not recognized as an internal or external command`, that tool is not installed yet:
+If any command prints back a version number (e.g. `rustc 1.87.0` or newer), you're good. If instead you see something like `'rustc' is not recognized as an internal or external command`, that tool is not installed yet:
 
 - **Rust missing** → install it from [rustup.rs](https://rustup.rs) (also gives you `cargo`)
 - **Node.js missing** → install it from [nodejs.org](https://nodejs.org) (LTS version recommended)
@@ -48,8 +48,7 @@ git clone https://github.com/9t29zhmwdh-coder/LifeSort.git
 Open your terminal in the extracted/cloned folder (e.g. `cd C:\Projects\LifeSort`) and run:
 
 ```powershell
-ollama pull llama3
-ollama pull llava
+ollama pull qwen3.5:4b
 
 cd frontend
 npm install
@@ -105,8 +104,7 @@ git clone https://github.com/9t29zhmwdh-coder/LifeSort.git
 ```bash
 cd LifeSort
 
-ollama pull llama3
-ollama pull llava
+ollama pull qwen3.5:4b
 
 cd frontend && npm install && cd ..
 cargo tauri dev
@@ -158,8 +156,7 @@ git clone https://github.com/9t29zhmwdh-coder/LifeSort.git
 ```bash
 cd LifeSort
 
-ollama pull llama3
-ollama pull llava
+ollama pull qwen3.5:4b-mlx
 
 cd frontend && npm install && cd ..
 cargo tauri dev
@@ -180,4 +177,4 @@ After the build completes, a native LifeSort window opens. You may need to allow
 | PowerShell blocks `.ps1` scripts with an execution policy error | Windows execution policy defaults to "Restricted" | Run PowerShell as Administrator and execute `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | Rust build fails with linker errors on Windows | Missing C++ Build Tools | Install "Desktop development with C++" via the [Visual Studio Build Tools installer](https://visualstudio.microsoft.com/visual-cpp-build-tools/) |
 | `cargo tauri dev` fails with missing `webkit2gtk` / glib errors on Linux | Missing WebKitGTK system dependencies | Install them via your package manager, e.g. `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev` |
-| AI features (recognition, tagging) don't work | Ollama not installed or models not pulled | Install [Ollama](https://ollama.ai), then run `ollama pull llama3` and `ollama pull llava` |
+| The overview says Ollama is not reachable or a model is missing | Ollama not running, or the model in Settings not pulled | Start [Ollama](https://ollama.com), then `ollama pull qwen3.5:4b-mlx` (Windows, Linux: `qwen3.5:4b`). Which model fits your Mac is in the README |

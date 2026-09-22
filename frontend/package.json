@@ -1,6 +1,6 @@
 {
   "name": "lifesort-frontend",
-  "version": "1.0.14",
+  "version": "1.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,6 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
-    "@tauri-apps/plugin-shell": "^2",
     "react": "^19",
     "react-dom": "^19",
     "recharts": "^3.10.1",

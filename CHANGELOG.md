@@ -5,6 +5,54 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] - 2026-09-22
+
+This release makes the app do what the README says, and changes the README where the app could not. Every claim below was checked in the running app, against a stand-in Ollama server in the tests, or with real models in the new benchmark.
+
+### Fixed
+
+- **"Scan folder" could not open the folder dialog.** The Tauri capability file was missing, and Tauri 2 denies every plugin command without one. It now grants exactly the folder dialog and the confirmation dialog.
+- **Moving could destroy files.** Two files with the same name heading for the same folder were renamed onto each other, and the second silently replaced the first. Targets are now unique already in the preview (`IMG_0001 (2).JPG`), a target that appears later gets the next free name, and undo refuses to put a file back where something new now sits.
+- **Undo did not survive a restart.** Moves were only kept in memory. They are journaled in SQLite and listed again on the next start. A failed move was stored as `failed("…")`, read back as pending and offered again; the status is now stored correctly.
+- **Photos reached the vision model cut off.** The first 512 KB of each file were sent, which for any real photo is a broken JPEG, and HEIC from the iPhone was not readable at all. Photos are now decoded, reduced to at most 1024 px and sent as a complete JPEG; HEIC is read through `sips` on macOS.
+- **iPhone screenshots were never recognised.** The size list held 390, 430 and 375, iPhone sizes in points instead of pixels, while any picture with a 1080 edge counted. Screenshots are now recognised by the iOS EXIF marker, the file name, or the exact pixel size of iPhones, iPads, Android phones and Macs. With a model available, a screen size alone no longer decides: the benchmark found 1920 × 1080 photos without EXIF, typical for forwarded messenger images, in the screenshot folder.
+- **German documents crashed the classifier.** Text was cut at byte 4000, which panics when that byte falls inside ä, ö, ü or €. It is now cut at a character boundary.
+- **Document rules took the first keyword found anywhere.** "Tax" on an English invoice made it a tax document, and "eur" inside "teuer" made any text an invoice. Rules now score whole words per category.
+- **The UI loaded results 500 ms after starting a scan**, so any larger folder showed zero files, and it never refreshed after classifying. It now waits for the backend to report completion, including the case where a small folder finishes before the scan call returns.
+- **The configured Ollama URL and models were ignored** by the batch classification, which used `localhost`, `llama3` and `llava` regardless of the settings. Settings are now used everywhere and saved in the database instead of being lost on restart.
+- **A missing model failed silently.** Every request answered 404 and the run fell back to rules without a word. The app now checks Ollama and both models first and shows a notice when AI is off.
+- **Ollama's MLX models failed on every photo.** The MLX engine answers `format: "json"` with 501; such models are now asked without the flag and the JSON is read from the answer.
+- **Small Macs ran out of memory.** Without a context size, Ollama reserved 12.5 GB for `qwen3.5:4b` instead of about 4 GB. Requests now ask for 8192 tokens, switch off reasoning, which cost seconds per photo, and use temperature 0, because with the default sampling the same photo landed in different folders on two runs.
+- **Duplicates were deleted for good** without a question. They now go to the Trash after a confirmation, through `NSFileManager` on macOS; the crate default asks Finder through AppleScript and blocks behind an Automation prompt.
+- **The Photos library could be taken apart.** A scan walked into `.photoslibrary` packages and proposed moving originals out of them. App packages and libraries are now skipped.
+- Duplicate count and wasted space were always 0; type detection read whole files, including videos of several gigabytes, to look at 8 KB; hidden folders were walked although "skip hidden" was on.
+- Building from a fresh clone failed: the `sqlx` query macros needed a prepared database through `DATABASE_URL`. The queries now run without it, and CI no longer installs `sqlx-cli`.
+- The release profile sat in `src-tauri/Cargo.toml`, where cargo ignores it. It now applies, without stripping build-time libraries, which breaks proc macros on macOS.
+
+### Security
+
+- `rustls` 0.23.41 to 0.23.45, closing RUSTSEC-2026-0285, TLS 1.3 handshake messages accepted across encryption level boundaries. `rustls` arrives through `reqwest`; the fix needs newer `aws-lc-rs`, `aws-lc-sys` and `rustls-webpki`, which moved with it. Nothing else in the lockfile changed. LifeSort itself talks plain HTTP to a local Ollama, so the TLS code is only reached if an HTTPS address is configured.
+
+### Changed
+
+- Default model `qwen3.5:4b-mlx` on macOS and `qwen3.5:4b` elsewhere, one model for photos and documents. Chosen by measurement: 92 % of 48 photos and 93 % of 14 documents at 4.1 GB. The old defaults `llava` and `llama3` reached 75 % on the photos. The README has the full table and a recommendation per Mac memory size.
+- Folder names follow the UI language; the UI language follows the system language on first start.
+- The dashboard, file view and dialogs are fully translated; the duplicates view was German only.
+- The interface uses the system font. It loaded Inter from Google Fonts on every start, a network connection an offline app should not make.
+- A content security policy replaces `csp: null`; the unused shell and file system plugins are removed.
+- CI starts the smoke test with the embedded frontend; before, a debug build waited for a dev server and showed an empty window that still counted as running.
+
+### Removed
+
+- The plugin system, the folder watcher commands and the OCR claim. None of them did anything: the plugin registry was never filled, the watcher commands only wrote a log line, and there is no OCR. The README no longer lists them.
+
+### Added
+
+- `bench_vision` and `bench_text` examples that measure models through the app's own code, with the sources and licences of the test images in `docs/benchmark`.
+- Tests for every fix above: 37 in total, including a stand-in Ollama server that checks what really goes over the wire.
+
+---
+
 ## [1.2.4] - 2026-08-27
 
 ### Fixed

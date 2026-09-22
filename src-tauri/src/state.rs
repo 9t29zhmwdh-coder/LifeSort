@@ -1,13 +1,16 @@
 use ls_core::{
     ai::ollama::OllamaBackend,
-    models::{FileEntry, OrganizeAction},
+    db::queries,
+    models::{ActionStatus, FileEntry, OrganizeAction},
 };
 use sqlx::SqlitePool;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use tokio::sync::RwLock;
 
-pub type Files = Arc<RwLock<HashMap<String, Vec<FileEntry>>>>;   // session_id → entries
+pub type Files = Arc<RwLock<HashMap<String, Vec<FileEntry>>>>; // session_id → entries
 pub type Actions = Arc<RwLock<Vec<OrganizeAction>>>;
+
+const SETTINGS_KEY: &str = "settings";
 
 pub struct AppState {
     pub pool: SqlitePool,
@@ -17,6 +20,7 @@ pub struct AppState {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct AppSettings {
     pub ollama_url: String,
     pub text_model: String,
@@ -34,25 +38,45 @@ impl Default for AppSettings {
             .join("LifeSort");
         Self {
             ollama_url: "http://localhost:11434".into(),
-            text_model: "llama3".into(),
-            vision_model: "llava".into(),
+            text_model: ls_core::ai::DEFAULT_MODEL.into(),
+            vision_model: ls_core::ai::DEFAULT_MODEL.into(),
             target_root: home.to_string_lossy().into_owned(),
-            auto_classify: true,
-            auto_hash: true,
+            auto_classify: false,
+            auto_hash: false,
             skip_hidden: true,
         }
     }
 }
 
 impl AppState {
-    pub fn ollama(&self) -> OllamaBackend {
-        // blocking read; only called from async context with settings already known
-        let s = self.settings.try_read().ok();
-        if let Some(s) = s {
-            OllamaBackend::new(s.ollama_url.clone(), s.text_model.clone(), s.vision_model.clone())
-        } else {
-            let def = AppSettings::default();
-            OllamaBackend::new(def.ollama_url, def.text_model, def.vision_model)
-        }
+    /// Settings and the undo journal from the database, so neither is lost
+    /// when the window closes.
+    pub async fn load(pool: SqlitePool) -> anyhow::Result<Self> {
+        let settings = queries::get_setting(&pool, SETTINGS_KEY)
+            .await?
+            .and_then(|json| serde_json::from_str(&json).ok())
+            .unwrap_or_default();
+        let applied: Vec<OrganizeAction> = queries::list_actions(&pool)
+            .await?
+            .into_iter()
+            .filter(|a| a.status == ActionStatus::Applied)
+            .collect();
+        Ok(Self {
+            pool,
+            files: Arc::default(),
+            actions: Arc::new(RwLock::new(applied)),
+            settings: Arc::new(RwLock::new(settings)),
+        })
+    }
+
+    pub async fn save_settings(&self, settings: AppSettings) -> anyhow::Result<()> {
+        queries::set_setting(&self.pool, SETTINGS_KEY, &serde_json::to_string(&settings)?).await?;
+        *self.settings.write().await = settings;
+        Ok(())
+    }
+
+    pub async fn ollama(&self) -> OllamaBackend {
+        let s = self.settings.read().await;
+        OllamaBackend::new(s.ollama_url.clone(), s.text_model.clone(), s.vision_model.clone())
     }
 }

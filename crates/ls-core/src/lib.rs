@@ -4,6 +4,5 @@ pub mod db;
 pub mod dedup;
 pub mod models;
 pub mod organizer;
-pub mod plugin;
 pub mod scanner;
-pub mod watcher;
+pub mod imageprep;

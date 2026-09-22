@@ -79,6 +79,13 @@ pub struct FileEntry {
     pub modified_at: DateTime<Utc>,
     pub exif_date: Option<DateTime<Utc>>,
     pub dimensions: Option<(u32, u32)>,
+    /// Camera make and model from EXIF. Screenshots and images that went
+    /// through a messenger have none.
+    #[serde(default)]
+    pub camera: Option<String>,
+    /// iOS writes "Screenshot" into the EXIF user comment of every screenshot.
+    #[serde(default)]
+    pub screenshot_marker: bool,
     pub classification: Option<Classification>,
     pub tags: Vec<String>,
     pub scan_session_id: String,

@@ -24,8 +24,6 @@ jobs:
       # Read-Rechte hier zu wiederholen ist das, was OpenSSF Scorecard
       # als zu weite Token-Berechtigung bemaengelt.
       contents: write
-    env:
-      DATABASE_URL: sqlite:./ci_check.db
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -46,14 +44,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
         working-directory: frontend
-
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features sqlite
-
-      - name: Prepare database
-        run: |
-          sqlx database create
-          sqlx migrate run --source crates/ls-core/src/db/migrations
 
       - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
         env:

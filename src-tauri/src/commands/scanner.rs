@@ -1,7 +1,6 @@
 use crate::error::LsResult;
 use crate::state::AppState;
 use ls_core::{
-    db::queries,
     models::FileEntry,
     scanner::{self, ScanOptions},
 };
@@ -10,70 +9,66 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
 use uuid::Uuid;
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct ScanSession {
     pub id: String,
     pub path: String,
     pub file_count: usize,
 }
 
+#[derive(Serialize, Clone)]
+pub struct ScanDone {
+    pub id: String,
+    pub count: usize,
+    pub error: Option<String>,
+}
+
+/// Starts the scan and returns at once; `scan://done` follows when the walk
+/// is finished. The UI waits for that event instead of guessing a delay.
 #[tauri::command]
 pub async fn scan_directory(
     path: String,
     app: AppHandle,
     state: State<'_, Arc<AppState>>,
 ) -> LsResult<ScanSession> {
+    if scanner::is_package(std::path::Path::new(&path)) {
+        return Err(anyhow::anyhow!(
+            "LifeSort does not reorganise the inside of an app package or a Photos library; moving files there would break it"
+        ).into());
+    }
     let session_id = Uuid::new_v4().to_string();
-    queries::insert_session(&state.pool, &session_id, &path).await?;
-
-    let settings = state.settings.read().await.clone();
     let opts = ScanOptions {
-        skip_hidden: settings.skip_hidden,
+        skip_hidden: state.settings.read().await.skip_hidden,
         ..Default::default()
     };
-    let path_clone = path.clone();
-    let session_clone = session_id.clone();
-    let pool_clone = state.pool.clone();
-    let files_clone = state.files.clone();
-    let app_clone = app.clone();
+    let (root, sid, files) = (path.clone(), session_id.clone(), state.files.clone());
 
     tokio::spawn(async move {
-        let mut batch: Vec<FileEntry> = vec![];
-        let _ = scanner::scan_directory(
-            std::path::Path::new(&path_clone),
-            &session_clone,
-            &opts,
-            |entry| {
+        let progress = app.clone();
+        let walk = tokio::task::spawn_blocking(move || {
+            let mut batch: Vec<FileEntry> = vec![];
+            let result = scanner::scan_directory(std::path::Path::new(&root), &sid, &opts, |entry| {
                 batch.push(entry);
                 if batch.len().is_multiple_of(50) {
-                    let _ = app_clone.emit("scan://progress", batch.len());
+                    let _ = progress.emit("scan://progress", batch.len());
                 }
-            },
-        );
+            });
+            (sid, batch, result.err().map(|e| e.to_string()))
+        })
+        .await;
+        let (sid, batch, error) = match walk {
+            Ok(done) => done,
+            Err(e) => return eprintln!("scan task failed: {e}"),
+        };
         let count = batch.len();
-        // Persist to DB
-        for entry in &batch {
-            let _ = queries::insert_file(&pool_clone, entry).await;
-        }
-        let _ = queries::update_session_count(&pool_clone, &session_clone, count as i64).await;
-        let mut map = files_clone.write().await;
-        map.insert(session_clone.clone(), batch);
-        let _ = app_clone.emit("scan://done", (session_clone, count));
+        files.write().await.insert(sid.clone(), batch);
+        let _ = app.emit("scan://done", ScanDone { id: sid, count, error });
     });
 
     Ok(ScanSession { id: session_id, path, file_count: 0 })
 }
 
 #[tauri::command]
-pub async fn get_scan_results(
-    session_id: String,
-    state: State<'_, Arc<AppState>>,
-) -> LsResult<Vec<FileEntry>> {
-    let map = state.files.read().await;
-    if let Some(entries) = map.get(&session_id) {
-        return Ok(entries.clone());
-    }
-    // Fallback to DB
-    let entries = queries::list_files_by_session(&state.pool, &session_id).await?;
-    Ok(entries)
+pub async fn get_scan_results(session_id: String, state: State<'_, Arc<AppState>>) -> LsResult<Vec<FileEntry>> {
+    Ok(state.files.read().await.get(&session_id).cloned().unwrap_or_default())
 }

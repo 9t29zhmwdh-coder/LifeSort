@@ -2,88 +2,88 @@ use crate::error::LsResult;
 use crate::state::AppState;
 use ls_core::{
     db::queries,
-    models::{ActionStatus, OrganizeAction},
-    organizer::{self, ConflictStrategy, OrganizerConfig},
+    models::{ActionStatus, FolderLang, OrganizeAction},
+    organizer::{self, OrganizerConfig},
 };
 use std::sync::Arc;
 use tauri::State;
 
+/// Fresh proposals for the session. Replaces earlier unexecuted proposals
+/// instead of piling them up; executed moves stay for undo.
 #[tauri::command]
 pub async fn propose_actions(
     session_id: String,
+    lang: FolderLang,
     state: State<'_, Arc<AppState>>,
 ) -> LsResult<Vec<OrganizeAction>> {
-    let settings = state.settings.read().await.clone();
     let config = OrganizerConfig {
-        target_root: std::path::PathBuf::from(&settings.target_root),
-        dry_run: true,
-        on_conflict: ConflictStrategy::Rename,
+        target_root: std::path::PathBuf::from(&state.settings.read().await.target_root),
+        folder_lang: lang,
     };
-    let map = state.files.read().await;
-    let entries = map.get(&session_id).cloned().unwrap_or_default();
-    drop(map);
+    let entries = state.files.read().await.get(&session_id).cloned().unwrap_or_default();
+    let proposed = organizer::propose_actions(&entries, &config);
 
-    let actions = organizer::propose_actions(&entries, &config);
-    // Cache
     let mut stored = state.actions.write().await;
-    stored.extend(actions.clone());
-    Ok(actions)
+    stored.retain(|a| a.status == ActionStatus::Applied);
+    stored.extend(proposed.clone());
+    Ok(proposed)
 }
 
-#[tauri::command]
-pub async fn execute_action(
-    action_id: String,
-    state: State<'_, Arc<AppState>>,
-) -> LsResult<ActionStatus> {
+/// Runs one move, journals it, and points the in-memory entry at the new
+/// place so a second proposal round starts from where the file really is.
+async fn run_one(state: &AppState, action_id: &str) -> LsResult<OrganizeAction> {
     let mut stored = state.actions.write().await;
     let action = stored
         .iter_mut()
         .find(|a| a.id == action_id)
-        .ok_or_else(|| anyhow::anyhow!("Aktion nicht gefunden"))?;
+        .ok_or_else(|| anyhow::anyhow!("unknown action {action_id}"))?;
+    if action.status != ActionStatus::Pending {
+        return Ok(action.clone());
+    }
     if let Err(e) = organizer::execute_action(action) {
         action.status = ActionStatus::Failed(e.to_string());
     }
-    let status = action.status.clone();
-    queries::insert_action(&state.pool, action).await?;
-    Ok(status)
-}
+    let result = action.clone();
+    drop(stored);
 
-#[tauri::command]
-pub async fn execute_all(
-    _session_id: String,
-    state: State<'_, Arc<AppState>>,
-) -> LsResult<Vec<(String, ActionStatus)>> {
-    let mut stored = state.actions.write().await;
-    let mut results = vec![];
-    for action in stored.iter_mut().filter(|a| a.status == ActionStatus::Pending) {
-        if let Err(e) = organizer::execute_action(action) {
-            action.status = ActionStatus::Failed(e.to_string());
+    queries::insert_action(&state.pool, &result).await?;
+    if let (ActionStatus::Applied, Some(target)) = (&result.status, &result.target_path) {
+        for entries in state.files.write().await.values_mut() {
+            if let Some(e) = entries.iter_mut().find(|e| e.id == result.file_id) {
+                e.path = target.clone();
+            }
         }
-        results.push((action.id.clone(), action.status.clone()));
-        let _ = queries::insert_action(&state.pool, action).await;
     }
-    Ok(results)
+    Ok(result)
 }
 
 #[tauri::command]
-pub async fn undo_action(
-    action_id: String,
-    state: State<'_, Arc<AppState>>,
-) -> LsResult<bool> {
+pub async fn execute_action(action_id: String, state: State<'_, Arc<AppState>>) -> LsResult<OrganizeAction> {
+    run_one(&state, &action_id).await
+}
+
+#[tauri::command]
+pub async fn undo_action(action_id: String, state: State<'_, Arc<AppState>>) -> LsResult<OrganizeAction> {
     let mut stored = state.actions.write().await;
     let action = stored
         .iter_mut()
         .find(|a| a.id == action_id)
-        .ok_or_else(|| anyhow::anyhow!("Aktion nicht gefunden"))?;
-    let ok = organizer::undo_action(action)?;
-    if ok {
-        queries::update_action_status(&state.pool, &action.id, &action.status).await?;
+        .ok_or_else(|| anyhow::anyhow!("unknown action {action_id}"))?;
+    organizer::undo_action(action)?;
+    let result = action.clone();
+    drop(stored);
+    queries::update_action_status(&state.pool, &result.id, &result.status).await?;
+    for entries in state.files.write().await.values_mut() {
+        if let Some(e) = entries.iter_mut().find(|e| e.id == result.file_id) {
+            e.path = result.source_path.clone();
+        }
     }
-    Ok(ok)
+    Ok(result)
 }
 
+/// Everything proposed or done, newest journal entries included, so undo
+/// works for moves from an earlier session too.
 #[tauri::command]
 pub async fn list_actions(state: State<'_, Arc<AppState>>) -> LsResult<Vec<OrganizeAction>> {
-    let stored = state.actions.read().await;
-    Ok(stored.clone())
+    Ok(state.actions.read().await.clone())
 }

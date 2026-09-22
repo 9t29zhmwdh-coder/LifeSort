@@ -1,13 +1,13 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { t } from './i18n'
+import { t, type Lang } from './i18n'
 
 // ── Types ────────────────────────────────────────────────────
 
 export type FileKind = 'photo' | 'pdf' | 'document' | 'video' | 'audio' | 'archive' | 'installer' | 'code' | 'font' | 'unknown'
 
 export type Category =
-  | 'photo_person' | 'photo_landscape' | 'photo_event' | 'photo_screenshot' | 'photo_meme' | 'photo_document'
+  | 'photo_person' | 'photo_landscape' | 'photo_event' | 'photo_screenshot' | 'photo_meme' | 'photo_document' | 'photo_other'
   | 'invoice' | 'contract' | 'guarantee' | 'tax_document' | 'letter' | 'certificate' | 'report'
   | 'installer_app' | 'download_archive' | 'download_asset' | 'download_junk'
   | 'video' | 'audio' | 'code' | 'unknown'
@@ -21,7 +21,7 @@ export interface Classification {
   extracted_amount?: number
   extracted_sender?: string
   ai_summary?: string
-  classified_by: 'rules' | 'ai' | 'ocr' | 'extension'
+  classified_by: 'rules' | 'ai' | 'extension'
 }
 
 export interface FileEntry {
@@ -37,6 +37,8 @@ export interface FileEntry {
   modified_at: string
   exif_date?: string
   dimensions?: [number, number]
+  camera?: string
+  screenshot_marker: boolean
   classification?: Classification
   tags: string[]
   scan_session_id: string
@@ -73,6 +75,22 @@ export interface ScanSession {
   file_count: number
 }
 
+export interface ScanDone {
+  id: string
+  count: number
+  error?: string
+}
+
+export type AiStatus =
+  | { state: 'ready' }
+  | { state: 'unreachable' }
+  | { state: 'missing_models'; models: string[] }
+
+export interface ClassifyStart {
+  total: number
+  ai: AiStatus
+}
+
 export interface ScanStats {
   total_files: number
   total_size_bytes: number
@@ -96,47 +114,30 @@ export interface AppSettings {
 // ── API ──────────────────────────────────────────────────────
 
 export const api = {
-  // Scanner
-  scanDirectory:   (path: string) => invoke<ScanSession>('scan_directory', { path }),
-  getScanResults:  (sessionId: string) => invoke<FileEntry[]>('get_scan_results', { sessionId }),
-
-  // Classifier
-  classifyFile:    (fileId: string, sessionId: string) => invoke<Classification | null>('classify_file', { fileId, sessionId }),
-  classifyBatch:   (sessionId: string) => invoke<number>('classify_batch', { sessionId }),
-
-  // Dedup
-  findDuplicates:  (sessionId: string) => invoke<DuplicateGroup[]>('find_duplicates', { sessionId }),
-  resolveDuplicate: (group: DuplicateGroup, keepId: string) => invoke<string[]>('resolve_duplicate', { group, keepId }),
-
-  // Organizer
-  proposeActions:  (sessionId: string) => invoke<OrganizeAction[]>('propose_actions', { sessionId }),
-  executeAction:   (actionId: string) => invoke<ActionStatus>('execute_action', { actionId }),
-  executeAll:      (sessionId: string) => invoke<[string, ActionStatus][]>('execute_all', { sessionId }),
-  undoAction:      (actionId: string) => invoke<boolean>('undo_action', { actionId }),
-  listActions:     () => invoke<OrganizeAction[]>('list_actions'),
-
-  // Settings
-  getSettings:     () => invoke<AppSettings>('get_settings'),
-  saveSettings:    (settings: AppSettings) => invoke<void>('save_settings', { settings }),
-  checkOllama:     () => invoke<boolean>('check_ollama'),
-  listPlugins:     () => invoke<string[]>('list_plugins'),
-
-  // Stats
-  getStats:        (sessionId: string) => invoke<ScanStats>('get_stats', { sessionId }),
-
-  // Watcher
-  startWatch:      (path: string) => invoke<void>('start_watch', { path }),
-  stopWatch:       () => invoke<void>('stop_watch'),
+  scanDirectory:    (path: string) => invoke<ScanSession>('scan_directory', { path }),
+  getScanResults:   (sessionId: string) => invoke<FileEntry[]>('get_scan_results', { sessionId }),
+  classifyBatch:    (sessionId: string) => invoke<ClassifyStart>('classify_batch', { sessionId }),
+  findDuplicates:   (sessionId: string) => invoke<DuplicateGroup[]>('find_duplicates', { sessionId }),
+  resolveDuplicate: (sessionId: string, group: DuplicateGroup, keepId: string) =>
+    invoke<string[]>('resolve_duplicate', { sessionId, group, keepId }),
+  proposeActions:   (sessionId: string, lang: Lang) => invoke<OrganizeAction[]>('propose_actions', { sessionId, lang }),
+  executeAction:    (actionId: string) => invoke<OrganizeAction>('execute_action', { actionId }),
+  undoAction:       (actionId: string) => invoke<OrganizeAction>('undo_action', { actionId }),
+  listActions:      () => invoke<OrganizeAction[]>('list_actions'),
+  getSettings:      () => invoke<AppSettings>('get_settings'),
+  saveSettings:     (settings: AppSettings) => invoke<void>('save_settings', { settings }),
+  checkOllama:      () => invoke<AiStatus>('check_ollama'),
+  getStats:         (sessionId: string) => invoke<ScanStats>('get_stats', { sessionId }),
 }
 
 // ── Events ───────────────────────────────────────────────────
 
 export const events = {
-  onScanProgress:   (cb: (n: number) => void) => listen<number>('scan://progress', e => cb(e.payload)),
-  onScanDone:       (cb: (id: string, count: number) => void) => listen<[string, number]>('scan://done', e => cb(e.payload[0], e.payload[1])),
-  onClassifyProgress: (cb: (done: number, total: number) => void) => listen<[number, number]>('classify://progress', e => cb(e.payload[0], e.payload[1])),
-  onClassifyDone:   (cb: (n: number) => void) => listen<number>('classify://done', e => cb(e.payload)),
-  onDedupDone:      (cb: (n: number) => void) => listen<number>('dedup://done', e => cb(e.payload)),
+  onScanProgress:     (cb: (n: number) => void) => listen<number>('scan://progress', e => cb(e.payload)),
+  onScanDone:         (cb: (done: ScanDone) => void) => listen<ScanDone>('scan://done', e => cb(e.payload)),
+  onClassifyProgress: (cb: (done: number, total: number) => void) =>
+    listen<[number, number]>('classify://progress', e => cb(e.payload[0], e.payload[1])),
+  onClassifyDone:     (cb: () => void) => listen<number>('classify://done', () => cb()),
 }
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export function categoryLabel(cat: Category): string {
   const map: Record<Category, string> = {
     photo_person: t('catPhotoPerson'), photo_landscape: t('catPhotoLandscape'),
     photo_event: t('catPhotoEvent'), photo_screenshot: t('catPhotoScreenshot'),
-    photo_meme: t('catPhotoMeme'), photo_document: t('catPhotoDocument'),
+    photo_meme: t('catPhotoMeme'), photo_document: t('catPhotoDocument'), photo_other: t('catPhotoOther'),
     invoice: t('catInvoice'), contract: t('catContract'), guarantee: t('catGuarantee'),
     tax_document: t('catTaxDocument'), letter: t('catLetter'),
     certificate: t('catCertificate'), report: t('catReport'),
@@ -161,6 +162,15 @@ export function categoryLabel(cat: Category): string {
     video: t('catVideo'), audio: t('catAudio'), code: t('catCode'), unknown: t('catUnknown'),
   }
   return map[cat] ?? cat
+}
+
+export function kindLabel(kind: FileKind): string {
+  const map: Record<FileKind, string> = {
+    photo: t('kindPhoto'), pdf: t('kindPdf'), document: t('kindDocument'), video: t('kindVideo'),
+    audio: t('kindAudio'), archive: t('kindArchive'), installer: t('kindInstaller'),
+    code: t('kindCode'), font: t('kindFont'), unknown: t('kindUnknown'),
+  }
+  return map[kind] ?? kind
 }
 
 export function kindIcon(kind: FileKind): string {

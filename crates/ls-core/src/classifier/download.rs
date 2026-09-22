@@ -2,11 +2,13 @@ use crate::models::{Category, Classification, ClassifierKind, FileEntry, FileKin
 use once_cell::sync::Lazy;
 use regex::Regex;
 
+// Anchored to whole names and extensions: "temp" alone used to match
+// "Template.pdf" and "contemporary.zip".
 static JUNK_PATTERNS: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)(temp|tmp|cache|thumbs|desktop\.ini|\.ds_store|\.bak|~\d+|copy\s+of|kopie\s+von)").unwrap()
+    Regex::new(r"(?i)(^~\$|^thumbs\.db$|^desktop\.ini$|^\.ds_store$|\.(tmp|temp|bak|crdownload|part|partial)$)").unwrap()
 });
 static ASSET_PATTERNS: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)\.(svg|ico|png|jpg|webp|woff|ttf|otf|eot|css|json|xml|yaml|yml)$").unwrap()
+    Regex::new(r"(?i)\.(svg|ico|woff2?|ttf|otf|eot|css|json|xml|ya?ml)$").unwrap()
 });
 
 pub fn classify(entry: &FileEntry) -> Classification {

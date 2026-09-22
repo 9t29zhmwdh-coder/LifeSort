@@ -1,33 +1,52 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
 import { api, type AppSettings } from '../../lib/tauri'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useT } from '../../lib/i18n'
 
 export function SettingsView() {
-  const { settings, setSettings, setOllamaOnline } = useSettingsStore()
-  const [draft, setDraft] = useState<AppSettings>({ ...settings })
+  const { settings, setSettings, setAi } = useSettingsStore()
+  const [draft, setDraft] = useState<AppSettings | undefined>(settings)
   const [saved, setSaved] = useState(false)
   const [checking, setChecking] = useState(false)
-  const [ollamaMsg, setOllamaMsg] = useState('')
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const t = useT()
 
+  useEffect(() => { if (!draft && settings) setDraft({ ...settings }) }, [settings, draft])
+  if (!draft) return null
+
   const set = <K extends keyof AppSettings>(k: K, v: AppSettings[K]) =>
-    setDraft(d => ({ ...d, [k]: v }))
+    setDraft(d => (d ? { ...d, [k]: v } : d))
 
   const handleSave = async () => {
-    await api.saveSettings(draft)
-    setSettings(draft)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
+    try {
+      await api.saveSettings(draft)
+      setSettings(draft)
+      setAi(await api.checkOllama())
+      setSaved(true)
+      setTimeout(() => setSaved(false), 1500)
+    } catch (e) {
+      setMessage({ ok: false, text: t('saveFailed', { msg: String(e) }) })
+    }
   }
 
+  // Tests the values in the form, which only take effect once saved.
   const handleCheckOllama = async () => {
-    setChecking(true); setOllamaMsg('')
-    const ok = await api.checkOllama().catch(() => false)
-    setOllamaOnline(ok)
-    setOllamaMsg(ok ? `${t('ollamaReachable')} ✓` : t('ollamaUnreachable'))
-    setChecking(false)
+    setChecking(true)
+    setMessage(null)
+    try {
+      await api.saveSettings(draft)
+      setSettings(draft)
+      const status = await api.checkOllama()
+      setAi(status)
+      setMessage(
+        status.state === 'ready' ? { ok: true, text: t('ollamaReachable') }
+        : status.state === 'missing_models' ? { ok: false, text: t('aiMissing', { models: status.models.join(' ') }) }
+        : { ok: false, text: t('ollamaUnreachable') },
+      )
+    } finally {
+      setChecking(false)
+    }
   }
 
   const handlePickFolder = async () => {
@@ -43,9 +62,9 @@ export function SettingsView() {
         <Label>{t('ollamaUrl')}</Label>
         <Input value={draft.ollama_url} onChange={v => set('ollama_url', v)} />
         <Label>{t('textModel')}</Label>
-        <Input value={draft.text_model} onChange={v => set('text_model', v)} placeholder="llama3" />
+        <Input value={draft.text_model} onChange={v => set('text_model', v)} placeholder="qwen3.5:4b-mlx" />
         <Label>{t('visionModel')}</Label>
-        <Input value={draft.vision_model} onChange={v => set('vision_model', v)} placeholder="llava" />
+        <Input value={draft.vision_model} onChange={v => set('vision_model', v)} placeholder="qwen3.5:4b-mlx" />
         <button
           onClick={handleCheckOllama}
           disabled={checking}
@@ -53,11 +72,10 @@ export function SettingsView() {
         >
           {checking ? t('testing') : t('testConnection')}
         </button>
-        {ollamaMsg && (
-          <div className={`mt-1 text-xs ${ollamaMsg.includes('✓') ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-            {ollamaMsg}
-          </div>
+        {message && (
+          <div className={`mt-1 text-xs ${message.ok ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>{message.text}</div>
         )}
+        <p className="text-xs text-[#8b949e] mt-2">{t('modelHint')}</p>
       </Section>
 
       <Section title={t('targetFolderSection')}>
@@ -75,9 +93,6 @@ export function SettingsView() {
             {t('choose')}
           </button>
         </div>
-        <p className="text-xs text-[#8b949e] mt-1">
-          {t('defaultSubfolders')}
-        </p>
       </Section>
 
       <Section title={t('scanOptionsSection')}>

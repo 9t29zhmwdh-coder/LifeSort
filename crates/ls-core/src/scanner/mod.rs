@@ -1,9 +1,9 @@
-#![allow(unused_imports)]
 pub mod metadata;
 
 use crate::models::{FileEntry, FileKind};
 use anyhow::Result;
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{TimeZone, Utc};
+use std::io::Read;
 use std::path::Path;
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -21,24 +21,49 @@ impl Default for ScanOptions {
     }
 }
 
+/// Folders macOS shows as a single file. Their inside belongs to the owning
+/// app: moving a picture out of a `.photoslibrary` breaks Apple Photos, which
+/// then shows a gap where the photo was.
+const PACKAGE_SUFFIXES: &[&str] = &[
+    ".photoslibrary", ".musiclibrary", ".tvlibrary", ".imovielibrary", ".fcpbundle",
+    ".app", ".bundle", ".framework", ".plugin", ".xcodeproj", ".pages", ".numbers", ".key",
+];
+
+pub fn is_package(path: &Path) -> bool {
+    let name = path.file_name().map(|n| n.to_string_lossy().to_lowercase()).unwrap_or_default();
+    PACKAGE_SUFFIXES.iter().any(|s| name.ends_with(s))
+}
+
+fn is_excluded(entry: &walkdir::DirEntry, skip_hidden: bool) -> bool {
+    if entry.depth() == 0 {
+        return false;
+    }
+    let hidden = entry.file_name().to_string_lossy().starts_with('.');
+    (skip_hidden && hidden) || (entry.file_type().is_dir() && is_package(entry.path()))
+}
+
 pub fn scan_directory(
     path: &Path,
     session_id: &str,
     opts: &ScanOptions,
     mut on_file: impl FnMut(FileEntry),
 ) -> Result<usize> {
+    if is_package(path) {
+        anyhow::bail!(
+            "{} is an app package; LifeSort does not reorganise the inside of libraries or apps",
+            path.display()
+        );
+    }
     let mut walker = WalkDir::new(path).follow_links(false);
     if let Some(d) = opts.max_depth {
         walker = walker.max_depth(d);
     }
 
     let mut count = 0;
-    for entry in walker.into_iter().filter_map(|e| e.ok()) {
+    let skip_hidden = opts.skip_hidden;
+    let walk = walker.into_iter().filter_entry(move |e| !is_excluded(e, skip_hidden));
+    for entry in walk.filter_map(|e| e.ok()) {
         if !entry.file_type().is_file() {
-            continue;
-        }
-        let name = entry.file_name().to_string_lossy();
-        if opts.skip_hidden && name.starts_with('.') {
             continue;
         }
         let meta = match entry.metadata() {
@@ -85,11 +110,10 @@ pub fn scan_directory(
                 Utc.timestamp_opt(secs as i64, 0).single()
             });
 
-        // EXIF date + dimensions for photos
-        let (exif_date, dimensions) = if matches!(kind, FileKind::Photo) {
+        let photo = if matches!(kind, FileKind::Photo) {
             metadata::photo_metadata(file_path)
         } else {
-            (None, None)
+            metadata::PhotoMeta::default()
         };
 
         on_file(FileEntry {
@@ -103,8 +127,10 @@ pub fn scan_directory(
             hash: None,
             created_at,
             modified_at,
-            exif_date,
-            dimensions,
+            exif_date: photo.exif_date,
+            dimensions: photo.dimensions,
+            camera: photo.camera,
+            screenshot_marker: photo.screenshot_marker,
             classification: None,
             tags: vec![],
             scan_session_id: session_id.to_string(),
@@ -116,11 +142,12 @@ pub fn scan_directory(
 }
 
 fn detect_mime(path: &Path, ext: Option<&str>) -> String {
-    // Read first 8 KB for magic-byte detection
-    let bytes = std::fs::read(path)
-        .ok()
-        .map(|b| b[..b.len().min(8192)].to_vec())
-        .unwrap_or_default();
+    // The first 8 KB carry every signature infer knows. Reading the whole
+    // file here meant loading each multi-gigabyte video into memory.
+    let mut bytes = Vec::with_capacity(8192);
+    if let Ok(file) = std::fs::File::open(path) {
+        let _ = file.take(8192).read_to_end(&mut bytes);
+    }
 
     if let Some(kind) = infer::get(&bytes) {
         return kind.mime_type().to_string();
@@ -184,5 +211,26 @@ mod tests {
             detect_mime(&unbekannt, Some("xyzzy")),
             "application/octet-stream"
         );
+    }
+
+    /// Ein Scan des Bilder-Ordners darf nie in die Fotos-Mediathek laufen.
+    /// Sonst schlaegt LifeSort vor, Originale aus ihr herauszuschieben, und
+    /// Apple Fotos zeigt danach Luecken statt Bilder.
+    #[test]
+    fn mediathek_und_versteckte_ordner_bleiben_draussen() {
+        let root = std::env::temp_dir().join(format!("ls-pkg-{}", Uuid::new_v4()));
+        let originals = root.join("Photos Library.photoslibrary/originals/A");
+        std::fs::create_dir_all(&originals).unwrap();
+        std::fs::write(originals.join("IMG_1.heic"), b"x").unwrap();
+        std::fs::create_dir_all(root.join(".git")).unwrap();
+        std::fs::write(root.join(".git/HEAD"), b"x").unwrap();
+        std::fs::write(root.join("sichtbar.txt"), b"x").unwrap();
+
+        let mut names = vec![];
+        scan_directory(&root, "s", &ScanOptions::default(), |e| names.push(e.name)).unwrap();
+        assert_eq!(names, vec!["sichtbar.txt"]);
+
+        let lib = root.join("Photos Library.photoslibrary");
+        assert!(scan_directory(&lib, "s", &ScanOptions::default(), |_| {}).is_err());
     }
 }
