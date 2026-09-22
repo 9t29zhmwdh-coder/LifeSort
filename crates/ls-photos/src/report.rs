@@ -1,10 +1,10 @@
 //! Groups of assets that are worth a look when space runs out.
 
 use crate::{AssetKind, PhotoAsset};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupKey {
     /// All videos, largest first: usually most of the space.

@@ -13,6 +13,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 ls-core = { path = "../crates/ls-core" }
+ls-photos = { path = "../crates/ls-photos" }
+base64 = "0.23"
 serde.workspace     = true
 serde_json.workspace = true
 tokio.workspace     = true

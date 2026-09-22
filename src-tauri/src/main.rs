@@ -42,6 +42,14 @@ pub fn run() {
             settings::save_settings,
             settings::check_ollama,
             stats::get_stats,
+            photos::platform,
+            photos::photos_access,
+            photos::photos_scan,
+            photos::photos_groups,
+            photos::photos_classify,
+            photos::photos_cancel,
+            photos::photos_add_album,
+            photos::photos_open_app,
         ])
         .run(tauri::generate_context!())
         .expect("Tauri error");
