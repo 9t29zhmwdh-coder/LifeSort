@@ -9,8 +9,8 @@
 **Sortiert den Haufen, bei dem die Dateinamen nichts verraten.**
 
 `IMG_4471.jpg`, `Scan_002.pdf`, `Download (3).pdf`. LifeSort öffnet sie und
-sortiert nach dem, was tatsächlich drin ist: ein Vision-Modell schaut sich die
-Fotos an, ein Textmodell liest die Dokumente. Beide laufen auf deinem Gerät.
+sortiert nach dem, was tatsächlich drin ist: ein lokales Modell schaut sich die
+Fotos an und liest die Dokumente. Es läuft über [Ollama](https://ollama.com) auf deinem Gerät.
 
 **Nichts für dich, wenn** deine Dateien schon vernünftig heissen und eine Regel
 wie "PDFs nach Dokumente" reichen würde. Das ist Aufgabe einer Regel-Engine, und
@@ -18,6 +18,12 @@ wie "PDFs nach Dokumente" reichen würde. Das ist Aufgabe einer Regel-Engine, un
 Portfolio: es plant nach Regeln, zeigt dir den Plan vorher und führt über jede
 Aktion Buch, damit du sie zurückdrehen kannst. LifeSort ist für den Fall, wo
 keine Regel hilft, weil der Dateiname nichts sagt.
+
+**Nicht für die Apple-Fotos-Mediathek.** LifeSort sortiert Ordner. In eine
+`.photoslibrary` schaut es nie hinein, denn Dateien daraus zu verschieben
+beschädigt Apple Fotos, und am iPhone würde dadurch ohnehin kein Platz frei.
+Screenshots und weitergeleitete Bilder in iCloud-Fotos räumt man in der
+Fotos-App auf.
 
 Nichts wird ohne deine Bestätigung verschoben, und nichts verlässt das Gerät.
 
@@ -35,9 +41,9 @@ Nichts wird ohne deine Bestätigung verschoben, und nichts verlässt das Gerät.
 
 ---
 
-Die Oberfläche von LifeSort ist auf Englisch (Standard) und Deutsch verfügbar; umschaltbar über den Sprachtoggle.
+Die Oberfläche von LifeSort gibt es auf Englisch und Deutsch, beim ersten Start in der Systemsprache; umschaltbar über den Sprachtoggle.
 
-**In der Praxis:** du scannst einmal einen Ordner, LifeSort klassifiziert jede Datei lokal mit Ollama, und du erhältst eine übersichtliche Ansicht mit Sortier-Vorschlägen, die du vor jeder Verschiebung bestätigst. KI unterstützt nur bei Erkennung, Tagging und Zusammenfassungen; die zugrunde liegende Scan-, Hash- und Verschiebe-Logik funktioniert auch ohne sie.
+**In der Praxis:** du scannst einen Ordner, LifeSort ordnet jede Datei lokal ein, und du erhältst eine Übersicht mit Sortier-Vorschlägen, die du bestätigst, bevor etwas verschoben wird. Ohne Ollama arbeitet es mit Regeln (Screenshots, Dokumente nach Stichworten, Downloads nach Typ) und zeigt das auch an; das Modell ergänzt die Erkennung von Personen, Orten, Anlässen, Memes und fotografierten Dokumenten.
 
 ---
 
@@ -47,26 +53,54 @@ Die Oberfläche von LifeSort ist auf Englisch (Standard) und Deutsch verfügbar;
 
 ## Funktionen
 
-| Funktion | Beschreibung |
+| Funktion | Was sie tut |
 |---|---|
-| **Foto-Erkennung** | Erkennt Personen, Orte, Ereignisse, Screenshots, Memes via Vision-Modell |
-| **Dokument-Klassifizierung** | Rechnungen, Verträge, Garantien, Steuerunterlagen, Briefe |
-| **PDF-Analyse** | Extrahiert Absender, Datum, Betrag, Dokumenttyp via OCR + KI |
-| **Download-Sortierung** | Ordnet Installer, Archive, Assets und Müll automatisch ein |
-| **Intelligentes Tagging** | KI-generierte Tags pro Datei |
-| **Duplikaterkennung** | BLAKE3-Inhalts-Hashing, Bericht über verschwendeten Speicher |
-| **Sortier-Vorschläge** | Schlägt Verschiebe-Aktionen mit Zielpfad und Begründung vor: Nutzer bestätigt |
-| **Plugin-System** | Eigene Datei-Typ-Handler über Rust-Trait |
+| **Foto-Erkennung** | Personen, Orte, Anlässe, Screenshots, Memes, fotografierte Dokumente, über ein lokales Vision-Modell. HEIC vom iPhone wird auf macOS gelesen |
+| **Screenshots ohne KI** | Erkannt an der iOS-EXIF-Markierung, am Dateinamen oder an der exakten Bildschirmgrösse von iPhone, iPad, Android und Mac |
+| **Dokument-Einordnung** | Rechnungen, Verträge, Garantien, Steuerunterlagen, Briefe, Zeugnisse, Berichte, mit Datum und Betrag. Liest PDFs mit Textebene und reine Textdateien |
+| **Download-Sortierung** | Installer, Archive, Assets und Müll nach Typ und Name |
+| **Duplikaterkennung** | Gleicher Inhalt über Grösse und BLAKE3-Hash; Kopien kommen erst nach deiner Bestätigung in den Papierkorb |
+| **Sortier-Vorschläge** | Ein Zielordner pro Datei, in der Sprache der Oberfläche, sichtbar bevor etwas verschoben wird. Gleiche Namen bekommen `(2)`, überschrieben wird nie |
+| **Rückgängig** | Jede Verschiebung wird protokolliert; Rückgängig klappt auch nach einem Neustart und verweigert, wenn am alten Ort inzwischen etwas liegt |
+
+**Grenzen, offen gesagt:** Gescannte PDFs haben keine Textebene, und LifeSort hat kein OCR, sie bleiben „unbekannt“. Word- und Excel-Dateien werden nicht gelesen. HEIC braucht macOS; unter Windows und Linux werden HEIC-Fotos nur nach Regeln eingeordnet.
+
+---
+
+## Welches Modell für welchen Mac
+
+Ein Modell erledigt Fotos und Dokumente, also muss nur eines in den Speicher passen. Gemessen mit dem Code der App an 48 Fotos in 7 Kategorien und 14 Dokumenten auf Deutsch, Englisch und Französisch (`cargo run --release --example bench_vision` und `bench_text`, Quellen und Lizenzen in [docs/benchmark](docs/benchmark)).
+
+| Modell | Speicher im Betrieb | Fotos richtig | Dokumente richtig | Sekunden pro Foto* |
+|---|---|---|---|---|
+| **`qwen3.5:9b-mlx`** | 9,0 GB | **98 %** | 93 % | 5,6 |
+| **`qwen3.5:4b-mlx`** (Standard auf macOS) | 4,1 GB | **92 %** | 93 % | 3,1 |
+| `qwen3.5:4b` (Standard auf Windows, Linux) | 3,4 GB | 92 % | 93 % | 3,6 |
+| `gemma4:12b-mlx` | 7,7 GB | 92 % | 93 % | 4,0 |
+| `qwen2.5vl:7b` | 7,3 GB | 88 % | | 7,1 |
+| `minicpm-v4.6` | 0,8 GB | 75 % | 86 % | 1,2 |
+| `llava:7b` (bisherige Vorgabe) | 5,4 GB | 75 % | | 3,7 |
+| `qwen3.5:2b-mlx` | 3,1 GB | 46 % | 71 % | 2,0 |
+| nur Regeln, ohne Modell | 0 | nur Screenshots | 86 % | |
+
+\* Auf einem M4 Pro. Auf M1 und M2 nicht gemessen; rechne mit einem Mehrfachen der Zeit. Bei 3 Sekunden pro Foto dauern 1'000 Fotos rund 50 Minuten, ein grosser Ordner ist also eine Aufgabe für die Nacht.
+
+| Dein Mac | Nimm | Warum |
+|---|---|---|
+| 8 GB | `qwen3.5:4b-mlx` | macOS gibt der GPU etwa zwei Drittel des Speichers, rund 5 GB. Andere Apps schliessen; reicht es trotzdem nicht, `minicpm-v4.6` |
+| 16 GB | `qwen3.5:9b-mlx` | Passt in die rund 10,7 GB, die die GPU bekommt. Mit vielen offenen Apps `qwen3.5:4b-mlx` |
+| 24 GB oder mehr | `qwen3.5:9b-mlx` | Die 27B-Modelle brauchen 18 GB und mehr; auf einem MacBook Air mit 24 GB passen sie nicht |
+| Windows, Linux | `qwen3.5:4b` | MLX-Fassungen laufen nur auf Apple Silicon |
+
+Die `-mlx`-Fassungen laufen in Ollama auf Apples MLX-Engine und brauchen Apple Silicon. Die verbleibenden Fehler der empfohlenen Modelle liegen fast alle an einer Stelle: Essen am Restauranttisch hält das Modell für einen Anlass. Screenshots, Memes, Dokumente und Personen wurden jedes Mal richtig erkannt.
 
 ---
 
 ## Voraussetzungen
 
-- [Rust](https://rustup.rs/) 1.77+
-- [Node.js](https://nodejs.org/) 20+
-- [Tauri CLI v2](https://tauri.app/): `cargo install tauri-cli`
-- [Ollama](https://ollama.ai) (optional, für KI-gestützte Sortierung): `ollama pull llama3 && ollama pull llava`
-- macOS / Windows / Linux
+- [Ollama](https://ollama.com) mit einem Modell aus der Tabelle oben, zum Beispiel `ollama pull qwen3.5:4b-mlx`. Optional: ohne Modell sortiert LifeSort nach Regeln
+- Zum Bauen aus dem Quellcode: [Rust](https://rustup.rs/) 1.87 oder neuer, [Node.js](https://nodejs.org/) 20+, [Tauri CLI v2](https://tauri.app/) (`cargo install tauri-cli`)
+- macOS, Windows oder Linux
 
 ---
 
@@ -76,28 +110,37 @@ Die Oberfläche von LifeSort ist auf Englisch (Standard) und Deutsch verfügbar;
 git clone https://github.com/9t29zhmwdh-coder/LifeSort
 cd LifeSort
 
-ollama pull llama3
-ollama pull llava
+ollama pull qwen3.5:4b-mlx      # unter Windows oder Linux: qwen3.5:4b
 
 cd frontend && npm install && cd ..
 cargo tauri dev
+```
+
+Die Kommandozeile macht dasselbe ohne Fenster:
+
+```bash
+cargo run -p ls-cli -- organize ~/Downloads --target ~/Sortiert --german            # Probelauf, nur Regeln
+cargo run -p ls-cli -- organize ~/Downloads --target ~/Sortiert --german --ai       # mit dem Standardmodell
+cargo run -p ls-cli -- organize ~/Downloads --target ~/Sortiert --german --ai --execute
 ```
 
 ---
 
 ## Deinstallation / Aufräumen
 
-LifeSort ist eine eigenständige App ohne Installer und ohne Hintergrunddienst.
+LifeSort hat keinen Hintergrunddienst.
 
-- **macOS:** App-Bundle löschen, danach `~/Library/Application Support/LifeSort/` (Datenbank, Einstellungen) und, falls vorhanden, `~/Library/Logs/LifeSort/` entfernen.
-- **Windows:** App-Ordner entfernen, danach `%APPDATA%\LifeSort\` löschen.
-- LifeSort greift nie auf Dateien ausserhalb der explizit gescannten und organisierten Ordner zu; es gibt sonst nichts aufzuräumen.
+- **macOS:** App löschen, dann `~/Library/Application Support/ch.raystudio.lifesort/` (Verschiebe-Journal und Einstellungen).
+- **Windows:** App deinstallieren, dann `%APPDATA%\ch.raystudio.lifesort\` löschen.
+- **Linux:** AppImage löschen, dann `~/.local/share/ch.raystudio.lifesort/`.
+- Modelle bleiben in Ollama, bis du sie entfernst: `ollama rm qwen3.5:4b-mlx`.
+- LifeSort fasst nichts ausserhalb der gescannten Ordner und des gewählten Zielordners an.
 
 ---
 
 ## Datenschutz
 
-LifeSort verarbeitet alle Dateien **lokal auf deinem Gerät**. Es werden keine Daten in die Cloud hochgeladen. Ollama führt die Modelle vollständig offline aus; deine Dateien verlassen dein Gerät nie.
+Alles bleibt auf deinem Gerät. Fotos und Dokumente gehen nur an die Ollama-Adresse aus den Einstellungen, standardmässig `localhost`. Keine Telemetrie, keine Schriften oder Skripte aus dem Internet. Details in [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -105,22 +148,26 @@ LifeSort verarbeitet alle Dateien **lokal auf deinem Gerät**. Es werden keine D
 
 ```
 LifeSort/
-├── crates/ls-core/      # Rust: Scanner, Klassifizierung, Tagging, DB
-├── crates/ls-cli/       # CLI-Binary
-├── src-tauri/           # Tauri v2 Backend + IPC-Commands
+├── crates/ls-core/      # Rust: Scanner, Einordnung, Sortierung, Journal
+├── crates/ls-cli/       # CLI
+├── src-tauri/           # Tauri-v2-Backend + IPC-Befehle
 └── frontend/            # React + TypeScript + Tailwind + Recharts
 ```
 
-### Ziel-Ordnerstruktur
+Mehr in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### Ordner, die LifeSort anlegt
+
+Die Namen folgen der Sprache der Oberfläche (Englisch: `Photos/People`, `Documents/Invoices/2024`, …).
 
 ```
-LifeSort/
-├── Fotos/       Personen/  Orte/  Ereignisse/{Jahr}/  Screenshots/
-├── Dokumente/   Rechnungen/{Jahr}/  Verträge/  Steuern/{Jahr}/
-├── Downloads/   Installer/  Archive/  Assets/  Müll/
-└── Medien/      Videos/  Audio/
+Fotos/       Personen/  Orte/  Ereignisse/{Jahr}/  Screenshots/  Memes/  Dokumente/  Diverses/
+Dokumente/   Rechnungen/{Jahr}/  Vertraege/  Garantien/  Steuern/{Jahr}/  Briefe/  Zertifikate/  Berichte/
+Downloads/   Installer/  Archive/  Assets/  Muell/
+Medien/      Videos/  Audio/
+Code/  Sonstiges/
 ```
 
 ---
 
-**Autor:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Active · ![version](https://img.shields.io/github/v/release/9t29zhmwdh-coder/LifeSort?color=6b7280&style=flat-square) · **Lizenz:** MIT
+**Autor:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Aktiv · ![version](https://img.shields.io/github/v/release/9t29zhmwdh-coder/LifeSort?color=6b7280&style=flat-square) · **Lizenz:** MIT
