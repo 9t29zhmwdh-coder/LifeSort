@@ -111,6 +111,37 @@ export interface AppSettings {
   skip_hidden: boolean
 }
 
+export type PhotoAccess = 'authorized' | 'limited' | 'denied' | 'not_determined' | 'restricted' | 'unsupported'
+export type PhotoGroupKey = 'videos' | 'screenshots' | 'burst_extras' | 'memes' | 'photographed_documents'
+
+export interface PhotoAsset {
+  id: string
+  kind: 'image' | 'video' | 'other'
+  screenshot: boolean
+  burst_extra: boolean
+  width: number
+  height: number
+  duration_s: number
+  bytes: number
+  filename: string
+  created?: string
+  favorite: boolean
+}
+
+export interface PhotoGroup {
+  key: PhotoGroupKey
+  count: number
+  bytes: number
+  ids: string[]
+  top: PhotoAsset[]
+}
+
+export interface PhotosDone {
+  count: number
+  bytes: number
+  error?: string
+}
+
 // ── API ──────────────────────────────────────────────────────
 
 export const api = {
@@ -128,6 +159,15 @@ export const api = {
   saveSettings:     (settings: AppSettings) => invoke<void>('save_settings', { settings }),
   checkOllama:      () => invoke<AiStatus>('check_ollama'),
   getStats:         (sessionId: string) => invoke<ScanStats>('get_stats', { sessionId }),
+
+  platform:         () => invoke<string>('platform'),
+  photosAccess:     (request: boolean) => invoke<PhotoAccess>('photos_access', { request }),
+  photosScan:       () => invoke<void>('photos_scan'),
+  photosGroups:     () => invoke<PhotoGroup[]>('photos_groups'),
+  photosClassify:   () => invoke<ClassifyStart>('photos_classify'),
+  photosCancel:     () => invoke<void>('photos_cancel'),
+  photosAddAlbum:   (key: PhotoGroupKey, title: string) => invoke<number>('photos_add_album', { key, title }),
+  photosOpenApp:    () => invoke<void>('photos_open_app'),
 }
 
 // ── Events ───────────────────────────────────────────────────
@@ -138,9 +178,21 @@ export const events = {
   onClassifyProgress: (cb: (done: number, total: number) => void) =>
     listen<[number, number]>('classify://progress', e => cb(e.payload[0], e.payload[1])),
   onClassifyDone:     (cb: () => void) => listen<number>('classify://done', () => cb()),
+  onPhotosProgress:   (cb: (done: number, total: number) => void) =>
+    listen<[number, number]>('photos://progress', e => cb(e.payload[0], e.payload[1])),
+  onPhotosDone:       (cb: (done: PhotosDone) => void) => listen<PhotosDone>('photos://done', e => cb(e.payload)),
+  onPhotosClassifyProgress: (cb: (done: number, total: number) => void) =>
+    listen<[number, number]>('photos://classify-progress', e => cb(e.payload[0], e.payload[1])),
+  onPhotosClassifyDone: (cb: () => void) => listen<number>('photos://classify-done', () => cb()),
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+
+export function formatDuration(seconds: number): string {
+  const s = Math.round(seconds)
+  const m = Math.floor(s / 60)
+  return m > 0 ? `${m}:${String(s % 60).padStart(2, '0')}` : `0:${String(s).padStart(2, '0')}`
+}
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
