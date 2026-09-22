@@ -1,0 +1,19 @@
+[package]
+name    = "ls-photos"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace  = true
+anyhow.workspace = true
+chrono.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2            = "0.6"
+block2           = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString", "NSArray", "NSDate", "NSError", "NSValue", "NSKeyValueCoding", "NSData", "NSDictionary", "NSObject", "NSPredicate", "NSSortDescriptor", "NSGeometry"] }
+objc2-photos     = { version = "0.3", features = ["PHAsset", "PHAssetResource", "PHAssetCollectionChangeRequest", "PHAssetChangeRequest", "PHChange", "PHCollection", "PHFetchOptions", "PHFetchResult", "PHImageManager", "PHObject", "PHPhotoLibrary", "PhotosTypes", "PHChangeRequest", "block2", "objc2-app-kit", "objc2-core-foundation", "dispatch2"] }
+objc2-app-kit    = { version = "0.3", features = ["NSImage", "NSBitmapImageRep", "NSImageRep", "NSGraphics"] }
+objc2-core-foundation = { version = "0.3", features = ["CFCGTypes"] }
+image            = { version = "0.25", default-features = false, features = ["jpeg", "tiff"] }
