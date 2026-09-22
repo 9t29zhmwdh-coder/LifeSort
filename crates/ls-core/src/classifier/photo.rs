@@ -8,7 +8,11 @@ pub async fn classify(entry: &FileEntry, ai: Option<&dyn AiBackend>) -> Classifi
     let date = entry.exif_date.map(|d| d.date_naive());
     let tags = messenger_tag(&entry.name);
 
-    if let Some(confidence) = screenshot_confidence(entry) {
+    // A matching screen size alone only decides when no model can look at
+    // the picture: 16:9 photos without EXIF, typical for images forwarded by
+    // a messenger, share sizes with screens.
+    let screenshot = if ai.is_some() { certain_screenshot(entry) } else { screenshot_confidence(entry) };
+    if let Some(confidence) = screenshot {
         let mut c = Classification::simple(Category::PhotoScreenshot, confidence, &["screenshot"], ClassifierKind::Rules);
         c.extracted_date = date;
         c.tags.extend(tags);
@@ -50,17 +54,25 @@ pub async fn classify(entry: &FileEntry, ai: Option<&dyn AiBackend>) -> Classifi
 /// comes out at exactly 1179 × 2556, but a photo forwarded by a messenger has
 /// lost its EXIF and might, which is why that case gets less confidence.
 pub fn screenshot_confidence(entry: &FileEntry) -> Option<f32> {
-    static NAME: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"(?i)(screenshot|screen shot|bildschirmfoto|capture d.écran|schermata)").unwrap());
-    if entry.screenshot_marker || NAME.is_match(&entry.name) {
-        return Some(0.95);
+    if let Some(c) = certain_screenshot(entry) {
+        return Some(c);
     }
     let (w, h) = entry.dimensions?;
     let (short, long) = (w.min(h), w.max(h));
     (entry.camera.is_none() && SCREEN_SIZES.contains(&(short, long))).then_some(0.75)
 }
 
-/// Native screenshot resolutions in pixels, short side first.
+/// The iOS EXIF marker or a screenshot file name. Both are set by the system
+/// that took the screenshot, not guessed.
+fn certain_screenshot(entry: &FileEntry) -> Option<f32> {
+    static NAME: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)(screenshot|screen shot|bildschirmfoto|capture d.écran|schermata)").unwrap());
+    (entry.screenshot_marker || NAME.is_match(&entry.name)).then_some(0.95)
+}
+
+/// Native screenshot resolutions in pixels, short side first. Pure 16:9
+/// sizes (1080 × 1920, 1440 × 2560, 2160 × 3840) are left out on purpose:
+/// they are just as common for photos and video stills.
 const SCREEN_SIZES: &[(u32, u32)] = &[
     // iPhone
     (640, 1136), (750, 1334), (1242, 2208), (1125, 2436), (828, 1792), (1242, 2688),
@@ -70,12 +82,12 @@ const SCREEN_SIZES: &[(u32, u32)] = &[
     (1536, 2048), (1620, 2160), (1640, 2360), (1668, 2224), (1668, 2388), (2048, 2732),
     (1488, 2266), (2064, 2752),
     // Android, common panels
-    (1080, 1920), (1080, 2400), (1080, 2412), (1440, 3200), (1440, 3120), (1440, 3088),
+    (1080, 2400), (1080, 2412), (1440, 3200), (1440, 3120), (1440, 3088),
     (1220, 2712), (1260, 2800),
     // Mac and PC displays
-    (768, 1366), (900, 1440), (800, 1280), (1200, 1920), (1440, 2560),
+    (768, 1366), (900, 1440), (800, 1280), (1200, 1920),
     (1600, 2560), (1664, 2560), (1800, 2880), (1864, 2880), (1964, 3024), (2234, 3456),
-    (1912, 2940), (2224, 3420), (2160, 3840),
+    (1912, 2940), (2224, 3420),
 ];
 
 /// Tags images that came through a messenger, recognisable by the file names
@@ -141,6 +153,44 @@ mod tests {
     fn a_single_matching_edge_is_not_enough() {
         assert!(screenshot_confidence(&photo("x.jpg", (1080, 1350), None)).is_none());
         assert!(screenshot_confidence(&photo("x.jpg", (1600, 1200), None)).is_none());
+    }
+
+    /// Found by the benchmark: three photos of 1920 × 1080 without EXIF were
+    /// filed as screenshots. Forwarded messenger images look exactly like that.
+    #[test]
+    fn full_hd_photo_without_exif_is_not_a_screenshot() {
+        assert!(screenshot_confidence(&photo("event_09.jpg", (1920, 1080), None)).is_none());
+        assert!(screenshot_confidence(&photo("x.jpg", (1080, 1920), None)).is_none());
+    }
+
+    struct Says(Category);
+    #[async_trait::async_trait]
+    impl AiBackend for Says {
+        async fn classify_text(&self, _: &str, _: &str) -> anyhow::Result<Classification> {
+            unreachable!()
+        }
+        async fn classify_image(&self, _: &str) -> anyhow::Result<Classification> {
+            Ok(Classification::simple(self.0, 0.9, &[], ClassifierKind::Ai))
+        }
+        async fn is_available(&self) -> bool {
+            true
+        }
+    }
+
+    /// With a model at hand, a screen size is a hint, not a verdict.
+    #[tokio::test]
+    async fn with_a_model_the_size_rule_steps_back() {
+        let path = std::env::temp_dir().join(format!("ls-shot-{}.png", uuid::Uuid::new_v4()));
+        image::RgbImage::new(1179, 2556).save(&path).unwrap();
+        let mut entry = photo("IMG_0815.PNG", (1179, 2556), None);
+        entry.path = path.to_string_lossy().into_owned();
+        let c = classify(&entry, Some(&Says(Category::PhotoMeme))).await;
+        assert_eq!(c.category, Category::PhotoMeme);
+        // Without a model the size decides.
+        assert_eq!(classify(&entry, None).await.category, Category::PhotoScreenshot);
+        // A screenshot file name is certain and skips the model.
+        let named = photo("Screenshot 2024-01-01.png", (1179, 2556), None);
+        assert_eq!(classify(&named, Some(&Says(Category::PhotoMeme))).await.category, Category::PhotoScreenshot);
     }
 
     #[test]
