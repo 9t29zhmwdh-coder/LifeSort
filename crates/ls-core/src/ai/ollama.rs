@@ -84,7 +84,7 @@ impl OllamaBackend {
     async fn generate(&self, model: &str, prompt: String, images: Option<Vec<String>>) -> Result<String> {
         let plain = self.plain_output.lock().map(|s| s.contains(model)).unwrap_or(false);
         if !plain {
-            let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: Some("json"), think: false, options: GenerateOptions { num_ctx: CONTEXT_TOKENS } };
+            let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: Some("json"), think: false, options: GenerateOptions { num_ctx: CONTEXT_TOKENS, temperature: 0.0 } };
             let resp = self.client.post(format!("{}/api/generate", self.base_url)).json(&req).send().await?;
             if resp.status() != reqwest::StatusCode::NOT_IMPLEMENTED {
                 return read_reply(resp, model).await;
@@ -93,7 +93,7 @@ impl OllamaBackend {
                 set.insert(model.to_string());
             }
         }
-        let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: None, think: false, options: GenerateOptions { num_ctx: CONTEXT_TOKENS } };
+        let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: None, think: false, options: GenerateOptions { num_ctx: CONTEXT_TOKENS, temperature: 0.0 } };
         let resp = self.client.post(format!("{}/api/generate", self.base_url)).json(&req).send().await?;
         read_reply(resp, model).await
     }
@@ -146,9 +146,14 @@ struct GenerateRequest<'a> {
 /// otherwise. qwen3.5:4b then occupies 12.5 GB instead of about 4, which
 /// does not fit an 8 GB Mac at all. A prompt plus one 1024 px image or
 /// 4000 bytes of text stays far below this.
+///
+/// Temperature 0 makes the answer depend on the file alone. With Ollama's
+/// default of 0.8 the same photo landed in different folders on two runs:
+/// 96 % correct in one pass over the benchmark set, 81 % in the next.
 #[derive(Serialize)]
 struct GenerateOptions {
     num_ctx: u32,
+    temperature: f32,
 }
 
 const CONTEXT_TOKENS: u32 = 8192;
