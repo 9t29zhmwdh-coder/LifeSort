@@ -139,6 +139,35 @@ jobs:
           echo "--- Ausgabe ---"
           cat start.log
 
+  # Feeds random input to the parsers that see untrusted text: document
+  # content and model answers. Two minutes per target on every change; a
+  # crash fails the job and leaves the input under fuzz/artifacts.
+  fuzz:
+    name: Fuzz (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [document_text, model_answer]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: fuzz
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: Fuzz for two minutes
+        run: cargo fuzz run ${{ matrix.target }} -- -max_total_time=120
+      - name: Keep the crashing input
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fuzz-${{ matrix.target }}
+          path: fuzz/artifacts
+
   frontend:
     name: Frontend typecheck & build
     runs-on: ubuntu-latest

@@ -9,3 +9,6 @@ dist/
 frontend/dist/
 src-tauri/target/
 src-tauri/gen/
+fuzz/target/
+fuzz/corpus/
+fuzz/artifacts/
