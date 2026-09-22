@@ -1,0 +1,30 @@
+[package]
+name = "ls-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Built by cargo-fuzz with a nightly toolchain, outside the main workspace.
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ls-core = { path = "../crates/ls-core" }
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "document_text"
+path = "fuzz_targets/document_text.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "model_answer"
+path = "fuzz_targets/model_answer.rs"
+test = false
+doc = false
+bench = false

@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.1] - 2026-09-22
+
+### Security
+
+- `event-listener` 5.4.1 to 5.4.2 (RUSTSEC-2026-0221), through `sqlx`; it no longer pulls in `concurrent-queue`. `nanoid` 3.3.16 to 3.3.19 (GHSA-2v37-7h3g-55p8), through the frontend build tools. The remaining known advisories sit in Tauri's GTK and URL-pattern dependencies (`glib`, `unic-*`, `proc-macro-error`) and have no fixed version this project can move to.
+- Releases carry signed build provenance: for each download a Sigstore bundle `<file>.sigstore.json` is attached, created by `actions/attest-build-provenance`. `gh attestation verify LifeSort.dmg --repo 9t29zhmwdh-coder/LifeSort` checks that a download was built from the tagged commit by the release workflow.
+
+### Added
+
+- Fuzzing: two `cargo-fuzz` targets feed random input to the parsers that handle untrusted text, the document rules with the cut for the model, and the parsing of model answers. CI runs each for two minutes on every change.
+- The OpenSSF Best Practices badge reached "passing": the missing answers were filled in, with links where the criteria require one.
+
+---
+
 ## [1.4.0] - 2026-09-22
 
 ### Added

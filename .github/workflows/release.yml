@@ -24,6 +24,9 @@ jobs:
       # Read-Rechte hier zu wiederholen ist das, was OpenSSF Scorecard
       # als zu weite Token-Berechtigung bemaengelt.
       contents: write
+      # Signed build provenance for the downloads (Sigstore through GitHub).
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -65,6 +68,25 @@ jobs:
           cp "$dmg" LifeSort.dmg
           gh release upload "${{ github.ref_name }}" LifeSort.dmg --clobber --repo ${{ github.repository }}
 
+      # Signed provenance: proves the file was built from this commit by this
+      # workflow. Uploaded next to it, where `gh attestation verify` and the
+      # OpenSSF Scorecard find it.
+      - name: Attest LifeSort.dmg
+        if: matrix.platform == 'macos-latest'
+        id: attest_LifeSort_dmg
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: LifeSort.dmg
+
+      - name: Upload provenance for LifeSort.dmg
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp "${{ steps.attest_LifeSort_dmg.outputs.bundle-path }}" "LifeSort.dmg.sigstore.json"
+          gh release upload "${{ github.ref_name }}" "LifeSort.dmg.sigstore.json" --clobber --repo ${{ github.repository }}
+
       - name: Upload stable-named installer (for README download link)
         if: matrix.platform == 'windows-latest'
         shell: pwsh
@@ -75,6 +97,25 @@ jobs:
           Copy-Item $exe.FullName "LifeSort-Setup.exe"
           gh release upload "${{ github.ref_name }}" "LifeSort-Setup.exe" --clobber --repo ${{ github.repository }}
 
+      # Signed provenance: proves the file was built from this commit by this
+      # workflow. Uploaded next to it, where `gh attestation verify` and the
+      # OpenSSF Scorecard find it.
+      - name: Attest LifeSort-Setup.exe
+        if: matrix.platform == 'windows-latest'
+        id: attest_LifeSort_Setup_exe
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: LifeSort-Setup.exe
+
+      - name: Upload provenance for LifeSort-Setup.exe
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp "${{ steps.attest_LifeSort_Setup_exe.outputs.bundle-path }}" "LifeSort-Setup.exe.sigstore.json"
+          gh release upload "${{ github.ref_name }}" "LifeSort-Setup.exe.sigstore.json" --clobber --repo ${{ github.repository }}
+
       - name: Upload stable-named AppImage (for README download link)
         if: matrix.platform == 'ubuntu-latest'
         shell: bash
@@ -84,3 +125,22 @@ jobs:
           appimage=$(find target/release/bundle/appimage -name "*.AppImage" | head -1)
           cp "$appimage" LifeSort.AppImage
           gh release upload "${{ github.ref_name }}" LifeSort.AppImage --clobber --repo ${{ github.repository }}
+
+      # Signed provenance: proves the file was built from this commit by this
+      # workflow. Uploaded next to it, where `gh attestation verify` and the
+      # OpenSSF Scorecard find it.
+      - name: Attest LifeSort.AppImage
+        if: matrix.platform == 'ubuntu-latest'
+        id: attest_LifeSort_AppImage
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: LifeSort.AppImage
+
+      - name: Upload provenance for LifeSort.AppImage
+        if: matrix.platform == 'ubuntu-latest'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp "${{ steps.attest_LifeSort_AppImage.outputs.bundle-path }}" "LifeSort.AppImage.sigstore.json"
+          gh release upload "${{ github.ref_name }}" "LifeSort.AppImage.sigstore.json" --clobber --repo ${{ github.repository }}
