@@ -1,0 +1,15 @@
+file	label
+rechnung_strom.txt	invoice
+invoice_webshop.txt	invoice
+qr_rechnung.txt	invoice
+facture.txt	invoice
+steuererklaerung.txt	tax
+lohnausweis.txt	tax
+mietvertrag.txt	contract
+employment_contract.txt	contract
+garantie.txt	guarantee
+brief_gemeinde.txt	letter
+letter_friend.txt	letter
+arbeitszeugnis.txt	certificate
+diplom.txt	certificate
+jahresbericht.txt	report

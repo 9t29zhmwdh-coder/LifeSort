@@ -38,8 +38,8 @@ impl Default for AppSettings {
             .join("LifeSort");
         Self {
             ollama_url: "http://localhost:11434".into(),
-            text_model: "llama3".into(),
-            vision_model: "llava".into(),
+            text_model: ls_core::ai::DEFAULT_MODEL.into(),
+            vision_model: ls_core::ai::DEFAULT_MODEL.into(),
             target_root: home.to_string_lossy().into_owned(),
             auto_classify: false,
             auto_hash: false,

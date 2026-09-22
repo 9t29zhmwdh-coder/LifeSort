@@ -1,0 +1,9 @@
+Lohnausweis – Certificat de salaire
+Jahr 2023, vom 01.01.2023 bis 31.12.2023
+Arbeitgeber: Beispiel Informatik GmbH, 8000 Zürich
+Arbeitnehmer: Anna Beispiel, AHV-Nr. 756.1234.5678.97
+1. Lohn  CHF 84'500
+9. Beiträge AHV/IV/EO/ALV/NBUV  CHF 5'450
+10. Berufliche Vorsorge CHF 4'100
+11. Nettolohn CHF 74'950
+Dieser Ausweis ist der Steuererklärung beizulegen.

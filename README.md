@@ -9,8 +9,8 @@
 **Sorts the pile where the filenames tell you nothing.**
 
 `IMG_4471.jpg`, `Scan_002.pdf`, `Download (3).pdf`. LifeSort opens them and
-sorts by what is actually inside: a vision model looks at the photos, a text
-model reads the documents. Both run on your machine.
+sorts by what is actually inside: a local model looks at the photos and reads
+the documents. It runs on your machine through [Ollama](https://ollama.com).
 
 **Not for you if** your files are already named sensibly and a rule like "PDFs
 into Documents" would do. That is a rule engine's job, and
@@ -18,6 +18,11 @@ into Documents" would do. That is a rule engine's job, and
 portfolio: it plans by rule, shows you the plan, and journals every action so
 you can undo it. LifeSort is for the case where no rule helps because the
 filename says nothing.
+
+**Not for the Apple Photos library.** LifeSort sorts folders. It never looks
+inside a `.photoslibrary`, because moving files out of it breaks Apple Photos,
+and deleting them there would not free space on an iPhone anyway. Screenshots
+and forwarded images in iCloud Photos are cleaned up in the Photos app.
 
 Nothing is moved without your confirmation, and nothing leaves the machine.
 
@@ -35,9 +40,9 @@ Nothing is moved without your confirmation, and nothing leaves the machine.
 
 ---
 
-LifeSort's UI is available in English (default) and German; switch anytime with the language toggle.
+LifeSort's UI is available in English and German; switch anytime with the language toggle. LifeSort's UI follows the system language on first start.
 
-**In practice:** you scan a folder once, LifeSort classifies every file locally with Ollama, and you get a clean overview with sort suggestions you confirm before anything moves. AI only assists with recognition, tagging, and summaries; the underlying scan, hash, and move logic works without it.
+**In practice:** you scan a folder, LifeSort classifies every file locally, and you get an overview with sort suggestions you confirm before anything moves. Without Ollama it still works on rules (screenshots, documents by keywords, downloads by type) and says so on screen; the model adds recognition of people, places, events, memes and photographed documents.
 
 ---
 
@@ -47,26 +52,54 @@ LifeSort's UI is available in English (default) and German; switch anytime with 
 
 ## Features
 
-| Feature | Description |
+| Feature | What it does |
 |---|---|
-| **Photo Recognition** | Detects people, places, events, screenshots, memes via vision model |
-| **Document Classification** | Invoices, contracts, guarantees, tax documents, letters |
-| **PDF Analysis** | Extracts sender, date, amount, document type via OCR + AI |
-| **Download Sorting** | Automatically categorizes installers, archives, assets, junk |
-| **Smart Tagging** | AI-generated tags per file |
-| **Duplicate Detection** | BLAKE3 content hashing, wasted space report |
-| **Organization Proposals** | Suggests move actions, shows target path and reason: user confirms |
-| **Plugin System** | Custom file type handlers via Rust trait |
+| **Photo recognition** | People, places, events, screenshots, memes, photographed documents, through a local vision model. HEIC from the iPhone is read on macOS |
+| **Screenshots without AI** | Recognised by the iOS EXIF marker, the file name, or the exact screen size of iPhones, iPads, Android phones and Macs |
+| **Document classification** | Invoices, contracts, guarantees, tax documents, letters, certificates, reports, with date and amount. Reads PDFs with a text layer and plain text files |
+| **Download sorting** | Installers, archives, assets and junk by type and name |
+| **Duplicate detection** | Identical content by size and BLAKE3 hash; copies go to the Trash only after you confirm |
+| **Sort suggestions** | A target folder per file, in the UI language, shown before anything moves. Same names get `(2)`, nothing is ever overwritten |
+| **Undo** | Every move is journaled; undo works after a restart too and refuses when the original place is taken again |
+
+**Limits, stated plainly:** scanned PDFs have no text layer and LifeSort has no OCR, so they stay "unknown". Word and Excel files are not read. HEIC needs macOS; on Windows and Linux HEIC photos are sorted by rules only.
+
+---
+
+## Which model for which Mac
+
+One model does both photos and documents, so only one has to fit into memory. Measured with the app's own code on 48 photos in 7 categories and 14 documents in German, English and French (`cargo run --release --example bench_vision` and `bench_text`, sources and licences in [docs/benchmark](docs/benchmark)).
+
+| Model | Memory in use | Photos correct | Documents correct | Seconds per photo* |
+|---|---|---|---|---|
+| **`qwen3.5:9b-mlx`** | 9.0 GB | **98 %** | 93 % | 5.6 |
+| **`qwen3.5:4b-mlx`** (default on macOS) | 4.1 GB | **92 %** | 93 % | 3.1 |
+| `qwen3.5:4b` (default on Windows, Linux) | 3.4 GB | 92 % | 93 % | 3.6 |
+| `gemma4:12b-mlx` | 7.7 GB | 92 % | 93 % | 4.0 |
+| `qwen2.5vl:7b` | 7.3 GB | 88 % | | 7.1 |
+| `minicpm-v4.6` | 0.8 GB | 75 % | 86 % | 1.2 |
+| `llava:7b` (the old default) | 5.4 GB | 75 % | | 3.7 |
+| `qwen3.5:2b-mlx` | 3.1 GB | 46 % | 71 % | 2.0 |
+| rules only, no model | 0 | screenshots only | 86 % | |
+
+\* On an M4 Pro. Not measured on M1 or M2; expect them to take several times as long. At 3 seconds a photo, 1,000 photos take about 50 minutes, so a large folder is a job for overnight.
+
+| Your Mac | Take | Why |
+|---|---|---|
+| 8 GB | `qwen3.5:4b-mlx` | macOS lends the GPU about two thirds of the memory, roughly 5 GB. Close other apps; if it still runs out, `minicpm-v4.6` |
+| 16 GB | `qwen3.5:9b-mlx` | Fits the roughly 10.7 GB the GPU gets. With many apps open, `qwen3.5:4b-mlx` |
+| 24 GB or more | `qwen3.5:9b-mlx` | The 27B models need 18 GB and more; they do not fit a 24 GB MacBook Air |
+| Windows, Linux | `qwen3.5:4b` | MLX builds run on Apple silicon only |
+
+The `-mlx` builds run on Apple's MLX engine inside Ollama and need Apple silicon. The remaining misses of the recommended models are almost all in one place: food photographed at a restaurant table is called an event. Screenshots, memes, documents and people were recognised every time.
 
 ---
 
 ## Requirements
 
-- [Rust](https://rustup.rs/) 1.77+
-- [Node.js](https://nodejs.org/) 20+
-- [Tauri CLI v2](https://tauri.app/): `cargo install tauri-cli`
-- [Ollama](https://ollama.ai) (optional, for AI-assisted sorting): `ollama pull llama3 && ollama pull llava`
-- macOS / Windows / Linux
+- [Ollama](https://ollama.com) with one model from the table above, for example `ollama pull qwen3.5:4b-mlx`. Optional: without it LifeSort sorts by rules
+- To build from source: [Rust](https://rustup.rs/) 1.87 or newer, [Node.js](https://nodejs.org/) 20+, [Tauri CLI v2](https://tauri.app/) (`cargo install tauri-cli`)
+- macOS, Windows or Linux
 
 ---
 
@@ -76,28 +109,37 @@ LifeSort's UI is available in English (default) and German; switch anytime with 
 git clone https://github.com/9t29zhmwdh-coder/LifeSort
 cd LifeSort
 
-ollama pull llama3
-ollama pull llava
+ollama pull qwen3.5:4b-mlx      # on Windows or Linux: qwen3.5:4b
 
 cd frontend && npm install && cd ..
 cargo tauri dev
+```
+
+The command line does the same without a window:
+
+```bash
+cargo run -p ls-cli -- organize ~/Downloads --target ~/Sorted            # dry run, rules only
+cargo run -p ls-cli -- organize ~/Downloads --target ~/Sorted --ai       # with the default model
+cargo run -p ls-cli -- organize ~/Downloads --target ~/Sorted --ai --execute
 ```
 
 ---
 
 ## Uninstall / Cleanup
 
-LifeSort is a self-contained app with no installer and no background service.
+LifeSort has no background service.
 
-- **macOS:** delete the app bundle, then remove `~/Library/Application Support/LifeSort/` (database, settings) and `~/Library/Logs/LifeSort/` if present.
-- **Windows:** remove the app folder, then delete `%APPDATA%\LifeSort\`.
-- LifeSort never touches your original files outside the folders you explicitly scan and organize; there is nothing else to clean up.
+- **macOS:** delete the app, then `~/Library/Application Support/ch.raystudio.lifesort/` (move journal and settings).
+- **Windows:** uninstall the app, then delete `%APPDATA%\ch.raystudio.lifesort\`.
+- **Linux:** delete the AppImage, then `~/.local/share/ch.raystudio.lifesort/`.
+- Models stay in Ollama until you remove them: `ollama rm qwen3.5:4b-mlx`.
+- LifeSort never touches files outside the folders you scan and the target folder you choose.
 
 ---
 
 ## Privacy
 
-LifeSort processes all files **locally on your machine**. No data is uploaded to the cloud. Ollama runs the models entirely offline; your files never leave your device.
+Everything stays on your machine. Photos and documents go only to the Ollama address in the settings, `localhost` by default. No telemetry, no fonts or scripts from the internet. Details in [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -105,20 +147,24 @@ LifeSort processes all files **locally on your machine**. No data is uploaded to
 
 ```
 LifeSort/
-├── crates/ls-core/      # Rust: scanner, classifier, tagger, DB
+├── crates/ls-core/      # Rust: scanner, classifier, organizer, journal
 ├── crates/ls-cli/       # CLI binary
 ├── src-tauri/           # Tauri v2 backend + IPC commands
 └── frontend/            # React + TypeScript + Tailwind + Recharts
 ```
 
-### Output Folder Structure
+More in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### Folders LifeSort creates
+
+Names follow the UI language (German: `Fotos/Personen`, `Dokumente/Rechnungen/2024`, …).
 
 ```
-LifeSort/
-├── Photos/      People/  Places/  Events/{Year}/  Screenshots/
-├── Documents/   Invoices/{Year}/  Contracts/  Taxes/{Year}/
-├── Downloads/   Installers/  Archives/  Assets/  Junk/
-└── Media/       Videos/  Audio/
+Photos/      People/  Places/  Events/{Year}/  Screenshots/  Memes/  Documents/  Other/
+Documents/   Invoices/{Year}/  Contracts/  Guarantees/  Taxes/{Year}/  Letters/  Certificates/  Reports/
+Downloads/   Installers/  Archives/  Assets/  Junk/
+Media/       Videos/  Audio/
+Code/  Other/
 ```
 
 ---

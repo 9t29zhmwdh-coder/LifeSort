@@ -1,0 +1,9 @@
+Order confirmation and invoice
+Invoice number: INV-10293
+Date: 2024-02-02
+Bill to: Tom Example, 12 Sample Road, London
+1 x USB-C charger 65W  GBP 39.99
+Shipping GBP 4.99
+VAT (20%) GBP 7.50
+Amount due: GBP 44.98
+Thank you for your order.

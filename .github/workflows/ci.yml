@@ -12,7 +12,6 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
-  DATABASE_URL: sqlite:./ci_check.db
 
 jobs:
   check:
@@ -41,12 +40,6 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features sqlite
-      - name: Prepare database
-        run: |
-          sqlx database create
-          sqlx migrate run --source crates/ls-core/src/db/migrations
       - name: cargo check
         run: cargo check --workspace
       - name: cargo clippy
@@ -87,12 +80,6 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features sqlite
-      - name: Prepare database
-        run: |
-          sqlx database create
-          sqlx migrate run --source crates/ls-core/src/db/migrations
 
       # Tauri bettet frontend/dist ein, und das Verzeichnis ist gitignored.
       # Ohne diesen Schritt findet der Build es auf einem frischen Checkout
@@ -185,12 +172,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features sqlite
-      - name: Prepare database
-        run: |
-          sqlx database create
-          sqlx migrate run --source crates/ls-core/src/db/migrations
       - name: Install tarpaulin
         run: cargo install cargo-tarpaulin --locked
       - name: Generate coverage

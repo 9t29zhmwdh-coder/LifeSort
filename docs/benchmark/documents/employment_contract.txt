@@ -1,0 +1,6 @@
+EMPLOYMENT AGREEMENT
+This agreement is made between Example Labs Ltd ("Employer") and Tom Example ("Employee").
+Start date: 1 May 2024. Position: Software Engineer.
+Salary: GBP 58,000 per year. Notice period: three months.
+Both parties agree to the terms set out above.
+Signed by both parties on 20 March 2024.

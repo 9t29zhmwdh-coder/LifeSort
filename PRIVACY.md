@@ -14,12 +14,13 @@ No file content, metadata, or usage data is ever transmitted to external servers
 
 ## Storage
 
-- A local SQLite database stores classification results and undo history
-- All data stays in your user home directory
+- A local SQLite database stores the move journal (for undo) and the settings
+- Scan and classification results are kept in memory only and are gone when the window closes
+- All data stays in your user account (`~/Library/Application Support/ch.raystudio.lifesort` on macOS)
 
 ## Third-party services
 
-None. LifeSort does not use any cloud services, analytics, or telemetry.
+None. LifeSort does not use any cloud services, analytics, or telemetry, and loads no fonts or scripts from the internet. Its only network connection goes to the Ollama address in the settings, `localhost` by default.
 
 ## Changes
 

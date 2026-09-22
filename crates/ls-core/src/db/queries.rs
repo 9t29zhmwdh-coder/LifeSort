@@ -4,7 +4,7 @@
 
 use crate::models::{ActionKind, ActionStatus, OrganizeAction};
 use anyhow::Result;
-use sqlx::SqlitePool;
+use sqlx::{Row, SqlitePool};
 
 fn status_str(status: &ActionStatus) -> &'static str {
     match status {
@@ -15,6 +15,10 @@ fn status_str(status: &ActionStatus) -> &'static str {
     }
 }
 
+// Plain runtime queries instead of `sqlx::query!`: the macro needs a prepared
+// database at compile time (DATABASE_URL), so a plain `cargo build` from a
+// fresh clone failed. The round trip is covered by tests/journal.rs.
+
 // ── Actions ───────────────────────────────────────────────────
 
 pub async fn insert_action(pool: &SqlitePool, action: &OrganizeAction) -> Result<()> {
@@ -22,64 +26,84 @@ pub async fn insert_action(pool: &SqlitePool, action: &OrganizeAction) -> Result
     // Debug formatting turned Failed("…") into `failed("…")`, which read back
     // as pending.
     let status = status_str(&action.status);
-    let undoable = if action.undoable { 1i64 } else { 0 };
-    sqlx::query!(
+    sqlx::query(
         "INSERT OR REPLACE INTO organize_actions(id, file_id, file_name, kind, source_path, target_path, reason, status, undoable)
          VALUES(?,?,?,?,?,?,?,?,?)",
-        action.id, action.file_id, action.file_name, kind,
-        action.source_path, action.target_path, action.reason, status, undoable
     )
+    .bind(&action.id)
+    .bind(&action.file_id)
+    .bind(&action.file_name)
+    .bind(kind)
+    .bind(&action.source_path)
+    .bind(&action.target_path)
+    .bind(&action.reason)
+    .bind(status)
+    .bind(action.undoable as i64)
     .execute(pool)
     .await?;
     Ok(())
 }
 
 pub async fn update_action_status(pool: &SqlitePool, id: &str, status: &ActionStatus) -> Result<()> {
-    let s = status_str(status);
-    sqlx::query!("UPDATE organize_actions SET status=? WHERE id=?", s, id)
-        .execute(pool).await?;
+    sqlx::query("UPDATE organize_actions SET status=? WHERE id=?")
+        .bind(status_str(status))
+        .bind(id)
+        .execute(pool)
+        .await?;
     Ok(())
 }
 
 pub async fn list_actions(pool: &SqlitePool) -> Result<Vec<OrganizeAction>> {
-    let rows = sqlx::query!(
-        "SELECT * FROM organize_actions ORDER BY created_at DESC"
+    let rows = sqlx::query(
+        "SELECT id, file_id, file_name, kind, source_path, target_path, reason, status, undoable
+         FROM organize_actions ORDER BY created_at DESC",
     )
     .fetch_all(pool)
     .await?;
 
-    Ok(rows.into_iter().map(|r| OrganizeAction {
-        id: r.id.unwrap_or_default(),
-        file_id: r.file_id,
-        file_name: r.file_name,
-        kind: match r.kind.as_str() {
-            "move"   => ActionKind::Move,
-            "delete" => ActionKind::Delete,
-            "copy"   => ActionKind::Copy,
-            "rename" => ActionKind::Rename,
-            _        => ActionKind::Tag,
-        },
-        source_path: r.source_path,
-        target_path: r.target_path,
-        reason: r.reason,
-        status: match r.status.as_str() {
-            "applied"  => ActionStatus::Applied,
-            "skipped"  => ActionStatus::Skipped,
-            "failed"   => ActionStatus::Failed(String::new()),
-            _          => ActionStatus::Pending,
-        },
-        undoable: r.undoable != 0,
-    }).collect())
+    rows.into_iter()
+        .map(|r| {
+            let kind: String = r.try_get("kind")?;
+            let status: String = r.try_get("status")?;
+            Ok(OrganizeAction {
+                id: r.try_get("id")?,
+                file_id: r.try_get("file_id")?,
+                file_name: r.try_get("file_name")?,
+                kind: match kind.as_str() {
+                    "move" => ActionKind::Move,
+                    "delete" => ActionKind::Delete,
+                    "copy" => ActionKind::Copy,
+                    "rename" => ActionKind::Rename,
+                    _ => ActionKind::Tag,
+                },
+                source_path: r.try_get("source_path")?,
+                target_path: r.try_get("target_path")?,
+                reason: r.try_get("reason")?,
+                status: match status.as_str() {
+                    "applied" => ActionStatus::Applied,
+                    "skipped" => ActionStatus::Skipped,
+                    "failed" => ActionStatus::Failed(String::new()),
+                    _ => ActionStatus::Pending,
+                },
+                undoable: r.try_get::<i64, _>("undoable")? != 0,
+            })
+        })
+        .collect()
 }
 
 pub async fn get_setting(pool: &SqlitePool, key: &str) -> Result<Option<String>> {
-    let row = sqlx::query!("SELECT value FROM app_settings WHERE key=?", key)
-        .fetch_optional(pool).await?;
-    Ok(row.map(|r| r.value))
+    let value = sqlx::query_scalar("SELECT value FROM app_settings WHERE key=?")
+        .bind(key)
+        .fetch_optional(pool)
+        .await?;
+    Ok(value)
 }
 
 pub async fn set_setting(pool: &SqlitePool, key: &str, value: &str) -> Result<()> {
-    sqlx::query!("INSERT OR REPLACE INTO app_settings(key, value) VALUES(?,?)", key, value)
-        .execute(pool).await?;
+    sqlx::query("INSERT OR REPLACE INTO app_settings(key, value) VALUES(?,?)")
+        .bind(key)
+        .bind(value)
+        .execute(pool)
+        .await?;
     Ok(())
 }

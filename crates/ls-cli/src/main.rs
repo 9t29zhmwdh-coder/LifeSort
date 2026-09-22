@@ -44,9 +44,9 @@ enum Cmd {
         ai: bool,
         #[arg(long, default_value = "http://localhost:11434")]
         ollama_url: String,
-        #[arg(long, default_value = "llama3")]
+        #[arg(long, default_value = ls_core::ai::DEFAULT_MODEL)]
         text_model: String,
-        #[arg(long, default_value = "llava")]
+        #[arg(long, default_value = ls_core::ai::DEFAULT_MODEL)]
         vision_model: String,
     },
 }

@@ -62,9 +62,9 @@ export function SettingsView() {
         <Label>{t('ollamaUrl')}</Label>
         <Input value={draft.ollama_url} onChange={v => set('ollama_url', v)} />
         <Label>{t('textModel')}</Label>
-        <Input value={draft.text_model} onChange={v => set('text_model', v)} placeholder="llama3" />
+        <Input value={draft.text_model} onChange={v => set('text_model', v)} placeholder="qwen3.5:4b-mlx" />
         <Label>{t('visionModel')}</Label>
-        <Input value={draft.vision_model} onChange={v => set('vision_model', v)} placeholder="llava" />
+        <Input value={draft.vision_model} onChange={v => set('vision_model', v)} placeholder="qwen3.5:4b-mlx" />
         <button
           onClick={handleCheckOllama}
           disabled={checking}
