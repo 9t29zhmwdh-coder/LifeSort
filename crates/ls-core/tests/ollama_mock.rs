@@ -109,6 +109,46 @@ async fn photo_reaches_the_vision_model_as_a_complete_small_jpeg() {
     assert_eq!((decoded.width(), decoded.height()), (1024, 768));
 }
 
+/// Ollama's MLX engine answers `format: "json"` with 501. The same server
+/// without the flag returns the JSON wrapped in a code fence.
+async fn fake_mlx_ollama() -> String {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move {
+        loop {
+            let (mut sock, _) = listener.accept().await.unwrap();
+            tokio::spawn(async move {
+                let (_, body) = read_request(&mut sock).await;
+                let req: Value = serde_json::from_slice(&body).unwrap_or(Value::Null);
+                let (status, reply) = if req.get("format").is_some() {
+                    ("501 Not Implemented", r#"{"error":"structured output is unavailable"}"#.to_string())
+                } else {
+                    let text = "```json\n{\"category\":\"meme\",\"is_screenshot\":false}\n```";
+                    ("200 OK", serde_json::json!({ "response": text }).to_string())
+                };
+                let head = format!(
+                    "HTTP/1.1 {status}\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n",
+                    reply.len()
+                );
+                sock.write_all(head.as_bytes()).await.unwrap();
+                sock.write_all(reply.as_bytes()).await.unwrap();
+            });
+        }
+    });
+    url
+}
+
+#[tokio::test]
+async fn mlx_models_without_structured_output_still_work() {
+    use ls_core::ai::AiBackend;
+    let backend = OllamaBackend::new(fake_mlx_ollama().await, "t".into(), "qwen3.5:4b-mlx".into());
+    let tiny = base64::engine::general_purpose::STANDARD.encode(b"not needed by the fake");
+    let c = backend.classify_image(&tiny).await.expect("fallback without format must succeed");
+    assert_eq!(c.category, Category::PhotoMeme);
+    // Second call goes straight to the plain request.
+    assert!(backend.classify_image(&tiny).await.is_ok());
+}
+
 #[tokio::test]
 async fn missing_model_is_reported() {
     let (url, _) = fake_ollama(&["llama3:latest"], "{}").await;

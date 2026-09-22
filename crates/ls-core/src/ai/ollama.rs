@@ -5,6 +5,8 @@ use async_trait::async_trait;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashSet;
+use std::sync::Mutex;
 use std::time::Duration;
 
 pub struct OllamaBackend {
@@ -12,6 +14,10 @@ pub struct OllamaBackend {
     pub text_model: String,
     pub vision_model: String,
     client: reqwest::Client,
+    /// Models that rejected `format: "json"`. Ollama's MLX engine answers it
+    /// with 501 "structured output is unavailable"; such models are asked
+    /// without the flag and the JSON is read out of the plain answer.
+    plain_output: Mutex<HashSet<String>>,
 }
 
 /// What the app can tell the user before a long classification run.
@@ -32,7 +38,13 @@ impl OllamaBackend {
             .timeout(Duration::from_secs(300))
             .build()
             .expect("static client configuration");
-        Self { base_url: base_url.trim_end_matches('/').to_string(), text_model, vision_model, client }
+        Self {
+            base_url: base_url.trim_end_matches('/').to_string(),
+            text_model,
+            vision_model,
+            client,
+            plain_output: Mutex::default(),
+        }
     }
 
     /// Reachable, and are both configured models installed? Without this a
@@ -70,21 +82,44 @@ impl OllamaBackend {
     }
 
     async fn generate(&self, model: &str, prompt: String, images: Option<Vec<String>>) -> Result<String> {
-        #[derive(Deserialize)]
-        struct Reply { response: String }
-        let req = GenerateRequest { model, prompt, images, stream: false, format: "json" };
-        let reply: Reply = self
-            .client
-            .post(format!("{}/api/generate", self.base_url))
-            .json(&req)
-            .send()
-            .await?
-            .error_for_status()
-            .with_context(|| format!("Ollama rejected the request for model {model}"))?
-            .json()
-            .await?;
-        Ok(reply.response)
+        let plain = self.plain_output.lock().map(|s| s.contains(model)).unwrap_or(false);
+        if !plain {
+            let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: Some("json") };
+            let resp = self.client.post(format!("{}/api/generate", self.base_url)).json(&req).send().await?;
+            if resp.status() != reqwest::StatusCode::NOT_IMPLEMENTED {
+                return read_reply(resp, model).await;
+            }
+            if let Ok(mut set) = self.plain_output.lock() {
+                set.insert(model.to_string());
+            }
+        }
+        let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: None };
+        let resp = self.client.post(format!("{}/api/generate", self.base_url)).json(&req).send().await?;
+        read_reply(resp, model).await
     }
+}
+
+async fn read_reply(resp: reqwest::Response, model: &str) -> Result<String> {
+    #[derive(Deserialize)]
+    struct Reply { response: String }
+    let reply: Reply = resp
+        .error_for_status()
+        .with_context(|| format!("Ollama rejected the request for model {model}"))?
+        .json()
+        .await?;
+    Ok(reply.response)
+}
+
+/// The JSON object inside an answer. Without the JSON format flag, models
+/// wrap it in prose or a Markdown code fence.
+fn json_object(text: &str) -> Result<Value> {
+    if let Ok(v) = serde_json::from_str::<Value>(text.trim()) {
+        return Ok(v);
+    }
+    let start = text.find('{').context("no JSON object in the answer")?;
+    let end = text.rfind('}').context("no JSON object in the answer")?;
+    anyhow::ensure!(end > start, "no JSON object in the answer");
+    Ok(serde_json::from_str(&text[start..=end])?)
 }
 
 /// "llava" is stored by Ollama as "llava:latest".
@@ -95,11 +130,12 @@ fn model_matches(wanted: &str, installed: &str) -> bool {
 #[derive(Serialize)]
 struct GenerateRequest<'a> {
     model: &'a str,
-    prompt: String,
+    prompt: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    images: Option<Vec<String>>,
+    images: Option<&'a [String]>,
     stream: bool,
-    format: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    format: Option<&'a str>,
 }
 
 #[async_trait]
@@ -130,8 +166,8 @@ fn string_list(v: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-pub fn parse_document(json_str: &str) -> Result<Classification> {
-    let v: Value = serde_json::from_str(json_str)?;
+pub fn parse_document(answer: &str) -> Result<Classification> {
+    let v = json_object(answer)?;
     let category = match v["category"].as_str().unwrap_or("unknown") {
         "invoice" => Category::Invoice,
         "contract" => Category::Contract,
@@ -155,8 +191,8 @@ pub fn parse_document(json_str: &str) -> Result<Classification> {
     })
 }
 
-pub fn parse_photo(json_str: &str) -> Result<Classification> {
-    let v: Value = serde_json::from_str(json_str)?;
+pub fn parse_photo(answer: &str) -> Result<Classification> {
+    let v = json_object(answer)?;
     let category = if v["is_screenshot"].as_bool().unwrap_or(false) {
         Category::PhotoScreenshot
     } else {
@@ -200,5 +236,11 @@ mod tests {
     #[test]
     fn garbage_is_an_error_not_a_category() {
         assert!(parse_photo("not json").is_err());
+    }
+
+    #[test]
+    fn json_is_found_inside_prose_and_code_fences() {
+        let fenced = "Here you go:\n```json\n{\"category\": \"meme\"}\n```";
+        assert_eq!(parse_photo(fenced).unwrap().category, Category::PhotoMeme);
     }
 }

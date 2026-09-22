@@ -29,3 +29,9 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
+
+# Proc macros and build scripts are loaded as dylibs by the compiler.
+# Stripping them breaks their Mach-O layout on macOS ("mis-aligned LINKEDIT"),
+# so only the shipped binaries are stripped.
+[profile.release.build-override]
+strip = false
