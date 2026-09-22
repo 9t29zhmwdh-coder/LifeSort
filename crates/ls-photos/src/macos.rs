@@ -92,6 +92,14 @@ pub fn list_assets(mut on_progress: impl FnMut(usize, usize)) -> Result<Vec<Phot
     }
     let result = unsafe { PHAsset::fetchAssetsWithOptions(Some(&options)) };
     let total = unsafe { result.count() };
+    // Test safeguard: a test build sets LIFESORT_MAX_PHOTOS to the size of
+    // its test library and stops here, having read nothing but the count,
+    // if the system library turns out to be a real one.
+    if let Some(max) = std::env::var("LIFESORT_MAX_PHOTOS").ok().and_then(|v| v.parse::<usize>().ok()) {
+        if total > max {
+            bail!("{total} items, more than the {max} allowed by LIFESORT_MAX_PHOTOS; stopped before reading");
+        }
+    }
     let mut out = Vec::with_capacity(total);
     for i in 0..total {
         let asset = unsafe { result.objectAtIndex(i) };

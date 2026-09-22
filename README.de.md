@@ -19,11 +19,11 @@ Portfolio: es plant nach Regeln, zeigt dir den Plan vorher und führt über jede
 Aktion Buch, damit du sie zurückdrehen kannst. LifeSort ist für den Fall, wo
 keine Regel hilft, weil der Dateiname nichts sagt.
 
-**Nicht für die Apple-Fotos-Mediathek.** LifeSort sortiert Ordner. In eine
-`.photoslibrary` schaut es nie hinein, denn Dateien daraus zu verschieben
-beschädigt Apple Fotos, und am iPhone würde dadurch ohnehin kein Platz frei.
-Screenshots und weitergeleitete Bilder in iCloud-Fotos räumt man in der
-Fotos-App auf.
+**Ordner und die Apple-Fotos-Mediathek.** In Ordnern verschiebt LifeSort
+Dateien an ihren Platz. Die Fotos-Mediathek verändert es nie: Auf dem Mac
+findet es dort, was Platz belegt, und sammelt es in Alben; gelöscht wird in
+der Fotos-App, und über iCloud wird der Platz auch auf dem iPhone frei. Siehe
+[Apple-Fotos-Modus](#apple-fotos-modus-macos).
 
 Nichts wird ohne deine Bestätigung verschoben, und nichts verlässt das Gerät.
 
@@ -62,8 +62,28 @@ Die Oberfläche von LifeSort gibt es auf Englisch und Deutsch, beim ersten Start
 | **Duplikaterkennung** | Gleicher Inhalt über Grösse und BLAKE3-Hash; Kopien kommen erst nach deiner Bestätigung in den Papierkorb |
 | **Sortier-Vorschläge** | Ein Zielordner pro Datei, in der Sprache der Oberfläche, sichtbar bevor etwas verschoben wird. Gleiche Namen bekommen `(2)`, überschrieben wird nie |
 | **Rückgängig** | Jede Verschiebung wird protokolliert; Rückgängig klappt auch nach einem Neustart und verweigert, wenn am alten Ort inzwischen etwas liegt |
+| **Apple-Fotos-Modus** (macOS) | Findet grosse Videos, Screenshots, nicht ausgewählte Serienbilder, Memes und Fotos von Belegen in der Fotos-Mediathek und sammelt sie in Alben. Löscht nichts |
 
 **Grenzen, offen gesagt:** Gescannte PDFs haben keine Textebene, und LifeSort hat kein OCR, sie bleiben „unbekannt“. Word- und Excel-Dateien werden nicht gelesen. HEIC braucht macOS; unter Windows und Linux werden HEIC-Fotos nur nach Regeln eingeordnet.
+
+---
+
+## Apple-Fotos-Modus (macOS)
+
+Der Reiter „Fotos-Mediathek“ liest die Fotos-Mediathek über Apples PhotoKit und gruppiert, was Platz belegt:
+
+- **Videos**, die grössten zuerst, meist der grösste Brocken
+- **Screenshots**, die Fotos selbst als solche markiert
+- **Serienbilder**, die nie ausgewählt wurden, aus den Seriendaten von PhotoKit (die Test-Mediathek enthielt keine, diese Gruppe ist also ungetestet)
+- Mit dem Modell: **Memes und Grussbilder**, **Fotos von Belegen und Dokumenten** und Screenshots, die Fotos nicht markiert hat
+
+Jede Gruppe wird zu einem Album „LifeSort: …“ in Fotos. **LifeSort löscht und verschiebt nie ein Foto.** Öffne das Album in Fotos, wähle aus, was weg soll, und lösche es dort; mit iCloud-Fotos wird der Platz auch auf dem iPhone frei, und Gelöschtes bleibt 30 Tage unter „Zuletzt gelöscht“. Favoriten werden nie vorgeschlagen. macOS fragt einmal nach dem Zugriff. Das Modell sieht kleine Vorschaubilder; Originale, die nur in iCloud liegen, werden nicht heruntergeladen.
+
+![Fotos-Modus](docs/screenshot-photos.de.png)
+
+Getestet an einer Mediathek mit 46 Fotos und 3 Videos mit `qwen3.5:4b-mlx`: alle 6 Memes, alle 7 Fotos von Dokumenten und alle 7 Screenshots wurden gefunden, das Favoriten-Video blieb aussen vor, und ein zweites Anlegen ergänzte das Album, statt ein zweites zu erstellen. Zwei normale Fotos, ein dunkles Essensbild und ein Partyfoto, landeten ebenfalls bei den Screenshots; deshalb ein Album vor dem Löschen durchsehen. Bei rund 3 Sekunden pro Foto auf einem M4 Pro dauert eine Mediathek mit 10'000 Fotos den grössten Teil einer Nacht; der Lauf lässt sich stoppen und fortsetzen.
+
+![Alben in Fotos](docs/photos-albums.de.png)
 
 ---
 
@@ -134,6 +154,7 @@ LifeSort hat keinen Hintergrunddienst.
 - **Windows:** App deinstallieren, dann `%APPDATA%\ch.raystudio.lifesort\` löschen.
 - **Linux:** AppImage löschen, dann `~/.local/share/ch.raystudio.lifesort/`.
 - Modelle bleiben in Ollama, bis du sie entfernst: `ollama rm qwen3.5:4b-mlx`.
+- Den Zugriff auf Fotos entziehst du unter Systemeinstellungen > Datenschutz & Sicherheit > Fotos oder mit `tccutil reset Photos ch.raystudio.lifesort`. Die von LifeSort angelegten Alben bleiben in Fotos, bis du sie löschst; ein Album zu löschen behält seine Fotos.
 - LifeSort fasst nichts ausserhalb der gescannten Ordner und des gewählten Zielordners an.
 
 ---
@@ -150,6 +171,7 @@ Alles bleibt auf deinem Gerät. Fotos und Dokumente gehen nur an die Ollama-Adre
 LifeSort/
 ├── crates/ls-core/      # Rust: Scanner, Einordnung, Sortierung, Journal
 ├── crates/ls-cli/       # CLI
+├── crates/ls-photos/    # Apple-Fotos-Mediathek über PhotoKit (macOS)
 ├── src-tauri/           # Tauri-v2-Backend + IPC-Befehle
 └── frontend/            # React + TypeScript + Tailwind + Recharts
 ```

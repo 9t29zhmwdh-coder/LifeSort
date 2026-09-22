@@ -26,8 +26,11 @@
 - [x] Duplicates go to the Trash after confirmation
 - [x] Model recommendations measured per Mac memory size
 
+## v1.4.0, Released
+- [x] Apple Photos mode: videos, screenshots, memes and photos of documents collected in albums, nothing deleted
+
 ## Next
-- [ ] Apple Photos mode through PhotoKit: find screenshots, messenger images and large videos inside the Photos library and collect them in albums, so deleting in Photos also frees space on the iPhone
+- [ ] Burst frames: verify the group on a library that contains bursts
 - [ ] OCR for scanned PDFs (today they are classified as unknown)
 - [ ] Office documents (.docx, .xlsx)
 

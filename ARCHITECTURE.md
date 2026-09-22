@@ -20,6 +20,8 @@ LifeSort/
 │   │   ├── examples/       # bench_vision, bench_text: the model measurements
 │   │   └── Cargo.toml
 │   │   └── Cargo.toml
+│   ├── ls-photos/        # Apple Photos library through PhotoKit, macOS only:
+│   │                     # read items, previews, albums; groups by space
 │   └── ls-cli/           # Headless CLI interface
 │       ├── src/main.rs
 │       └── Cargo.toml
@@ -52,6 +54,10 @@ LifeSort/
 6. **Undo** moves a file back, also after a restart, and refuses when the original place is taken.
 
 Scan results live in memory for the session. The database holds only the move journal and the settings.
+
+## Apple Photos mode
+
+`ls-photos` talks to PhotoKit through `objc2-photos`. It reads every photo and video with size, screenshot flag and burst state, groups what takes space (favourites never), asks the vision model about previews of the remaining photos, and adds groups to albums with `performChangesAndWait`. It has no code path that deletes or moves an asset. On Windows and Linux the crate compiles to stand-ins that report the mode as unsupported.
 
 ## AI Integration
 

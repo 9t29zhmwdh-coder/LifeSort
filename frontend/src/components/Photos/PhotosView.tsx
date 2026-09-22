@@ -119,17 +119,21 @@ export function PhotosView() {
 function GroupCard({ group }: { group: PhotoGroup }) {
   const t = useT()
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState('')
+  // Kept as data and translated on every render, so switching the language
+  // after creating an album does not leave the old language on screen.
+  const [created, setCreated] = useState<{ title: string; n: number } | null>(null)
+  const [failure, setFailure] = useState('')
   const title = t('albumPrefix') + t(GROUP_LABEL[group.key])
 
   const handleAlbum = async () => {
     setBusy(true)
-    setMessage('')
+    setCreated(null)
+    setFailure('')
     try {
       const n = await api.photosAddAlbum(group.key, title)
-      setMessage(t('albumCreated', { title, n }))
+      setCreated({ title, n })
     } catch (e) {
-      setMessage(String(e))
+      setFailure(String(e))
     } finally {
       setBusy(false)
     }
@@ -150,12 +154,13 @@ function GroupCard({ group }: { group: PhotoGroup }) {
           {busy ? t('creatingAlbum') : t('createAlbum')}
         </button>
       </div>
-      {message && (
+      {created && (
         <div className="flex items-center gap-3 text-sm text-[#3fb950] mb-3">
-          <span>{message}</span>
-          <button onClick={() => void api.photosOpenApp()} className="text-[#58a6ff] hover:underline">{t('openPhotos')}</button>
+          <span>{t('albumCreated', created)}</span>
+          <button onClick={() => void api.photosOpenApp()} className="shrink-0 text-[#58a6ff] hover:underline">{t('openPhotos')}</button>
         </div>
       )}
+      {failure && <div className="text-sm text-[#f85149] mb-3">{failure}</div>}
       <div className="text-xs font-semibold text-[#8b949e] uppercase tracking-wider mb-1">{t('largest')}</div>
       <div className="space-y-1">
         {group.top.map((a) => (
