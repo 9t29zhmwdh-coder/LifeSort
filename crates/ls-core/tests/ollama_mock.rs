@@ -103,6 +103,8 @@ async fn photo_reaches_the_vision_model_as_a_complete_small_jpeg() {
     let requests = seen.lock().unwrap().clone();
     let (_, body) = requests.iter().find(|(p, _)| p == "/api/generate").expect("no generate call");
     assert_eq!(body["model"], "qwen2.5vl:7b", "settings model must be used, not a hard-coded one");
+    assert_eq!(body["think"], false, "reasoning costs seconds per photo");
+    assert_eq!(body["options"]["num_ctx"], 8192, "the default context needs several times the memory");
     let b64 = body["images"][0].as_str().unwrap();
     let jpeg = base64::engine::general_purpose::STANDARD.decode(b64).unwrap();
     let decoded = image::load_from_memory(&jpeg).expect("model must receive a decodable image");

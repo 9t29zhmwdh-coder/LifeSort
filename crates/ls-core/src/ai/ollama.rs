@@ -84,7 +84,7 @@ impl OllamaBackend {
     async fn generate(&self, model: &str, prompt: String, images: Option<Vec<String>>) -> Result<String> {
         let plain = self.plain_output.lock().map(|s| s.contains(model)).unwrap_or(false);
         if !plain {
-            let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: Some("json") };
+            let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: Some("json"), think: false, options: GenerateOptions { num_ctx: CONTEXT_TOKENS } };
             let resp = self.client.post(format!("{}/api/generate", self.base_url)).json(&req).send().await?;
             if resp.status() != reqwest::StatusCode::NOT_IMPLEMENTED {
                 return read_reply(resp, model).await;
@@ -93,7 +93,7 @@ impl OllamaBackend {
                 set.insert(model.to_string());
             }
         }
-        let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: None };
+        let req = GenerateRequest { model, prompt: &prompt, images: images.as_deref(), stream: false, format: None, think: false, options: GenerateOptions { num_ctx: CONTEXT_TOKENS } };
         let resp = self.client.post(format!("{}/api/generate", self.base_url)).json(&req).send().await?;
         read_reply(resp, model).await
     }
@@ -136,7 +136,22 @@ struct GenerateRequest<'a> {
     stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     format: Option<&'a str>,
+    /// Reasoning models think aloud before answering by default. For a
+    /// one-word category that costs seconds per photo and changes nothing.
+    think: bool,
+    options: GenerateOptions,
 }
+
+/// Ollama reserves memory for the model's full context window unless told
+/// otherwise. qwen3.5:4b then occupies 12.5 GB instead of about 4, which
+/// does not fit an 8 GB Mac at all. A prompt plus one 1024 px image or
+/// 4000 bytes of text stays far below this.
+#[derive(Serialize)]
+struct GenerateOptions {
+    num_ctx: u32,
+}
+
+const CONTEXT_TOKENS: u32 = 8192;
 
 #[async_trait]
 impl AiBackend for OllamaBackend {
