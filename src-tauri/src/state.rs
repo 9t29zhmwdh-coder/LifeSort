@@ -17,6 +17,11 @@ pub struct AppState {
     pub files: Files,
     pub actions: Actions,
     pub settings: Arc<RwLock<AppSettings>>,
+    pub photos: Arc<RwLock<Vec<ls_photos::PhotoAsset>>>,
+    /// Groups the model assigned, by asset id.
+    pub photo_ai: Arc<RwLock<HashMap<String, ls_photos::GroupKey>>>,
+    /// Set by the cancel button; the classification loop checks it per photo.
+    pub photo_cancel: Arc<std::sync::atomic::AtomicBool>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -66,6 +71,9 @@ impl AppState {
             files: Arc::default(),
             actions: Arc::new(RwLock::new(applied)),
             settings: Arc::new(RwLock::new(settings)),
+            photos: Arc::default(),
+            photo_ai: Arc::default(),
+            photo_cancel: Arc::default(),
         })
     }
 

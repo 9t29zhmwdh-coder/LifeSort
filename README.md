@@ -19,10 +19,10 @@ portfolio: it plans by rule, shows you the plan, and journals every action so
 you can undo it. LifeSort is for the case where no rule helps because the
 filename says nothing.
 
-**Not for the Apple Photos library.** LifeSort sorts folders. It never looks
-inside a `.photoslibrary`, because moving files out of it breaks Apple Photos,
-and deleting them there would not free space on an iPhone anyway. Screenshots
-and forwarded images in iCloud Photos are cleaned up in the Photos app.
+**Folders and the Apple Photos library.** In folders LifeSort moves files into
+place. The Photos library it never changes: on macOS it finds what takes space
+there and collects it in albums, and you delete in the Photos app, which frees
+the space on your iPhone too through iCloud. See [Apple Photos mode](#apple-photos-mode-macos).
 
 Nothing is moved without your confirmation, and nothing leaves the machine.
 
@@ -61,8 +61,24 @@ LifeSort's UI is available in English and German; switch anytime with the langua
 | **Duplicate detection** | Identical content by size and BLAKE3 hash; copies go to the Trash only after you confirm |
 | **Sort suggestions** | A target folder per file, in the UI language, shown before anything moves. Same names get `(2)`, nothing is ever overwritten |
 | **Undo** | Every move is journaled; undo works after a restart too and refuses when the original place is taken again |
+| **Apple Photos mode** (macOS) | Finds large videos, screenshots, unpicked burst frames, memes and photos of receipts in the Photos library and collects them in albums. Deletes nothing |
 
 **Limits, stated plainly:** scanned PDFs have no text layer and LifeSort has no OCR, so they stay "unknown". Word and Excel files are not read. HEIC needs macOS; on Windows and Linux HEIC photos are sorted by rules only.
+
+---
+
+## Apple Photos mode (macOS)
+
+The "Photos library" tab reads the Photos library through Apple's PhotoKit and groups what takes space:
+
+- **Videos**, largest first, usually most of the space
+- **Screenshots** that Photos itself marks
+- **Burst frames** nobody picked, read from PhotoKit's burst data (the test library had no bursts, so this group is untested)
+- With the model: **memes and greeting pictures**, **photos of receipts and documents**, and screenshots Photos did not mark
+
+Each group becomes an album named "LifeSort: …" in Photos. **LifeSort never deletes or moves a photo.** Open the album in Photos, pick what should go and delete it there; with iCloud Photos the space is freed on the iPhone too, and deleted items stay 30 days in Recently Deleted. Favourites are never suggested. macOS asks once for access. The model sees small previews; originals stored only in iCloud are not downloaded.
+
+Tested on a library of 46 photos and 3 videos with `qwen3.5:4b-mlx`: all 6 memes, all 7 photos of documents and all 7 screenshots were found, the favourite video was left out, and creating an album twice extended it instead of making a second one. Two ordinary photos, a dark food picture and a party photo, also landed under screenshots, so look through an album before deleting. At about 3 seconds per photo on an M4 Pro, a library of 10,000 photos takes most of a night; the run can be stopped and continued.
 
 ---
 
@@ -133,6 +149,7 @@ LifeSort has no background service.
 - **Windows:** uninstall the app, then delete `%APPDATA%\ch.raystudio.lifesort\`.
 - **Linux:** delete the AppImage, then `~/.local/share/ch.raystudio.lifesort/`.
 - Models stay in Ollama until you remove them: `ollama rm qwen3.5:4b-mlx`.
+- Access to Photos is revoked in System Settings > Privacy & Security > Photos, or with `tccutil reset Photos ch.raystudio.lifesort`. The albums LifeSort created stay in Photos until you delete them; deleting an album keeps its photos.
 - LifeSort never touches files outside the folders you scan and the target folder you choose.
 
 ---
@@ -149,6 +166,7 @@ Everything stays on your machine. Photos and documents go only to the Ollama add
 LifeSort/
 ├── crates/ls-core/      # Rust: scanner, classifier, organizer, journal
 ├── crates/ls-cli/       # CLI binary
+├── crates/ls-photos/    # Apple Photos library through PhotoKit (macOS)
 ├── src-tauri/           # Tauri v2 backend + IPC commands
 └── frontend/            # React + TypeScript + Tailwind + Recharts
 ```

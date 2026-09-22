@@ -8,16 +8,19 @@ import { FileGrid } from './components/FileGrid/FileGrid'
 import { DuplicatesView } from './components/Duplicates/DuplicatesView'
 import { OrganizerView } from './components/Organizer/OrganizerView'
 import { SettingsView } from './components/Settings/SettingsView'
+import { PhotosView } from './components/Photos/PhotosView'
 
-export type Tab = 'dashboard' | 'files' | 'duplicates' | 'organize' | 'settings'
+export type Tab = 'dashboard' | 'files' | 'duplicates' | 'organize' | 'photos' | 'settings'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('dashboard')
+  const [isMac, setIsMac] = useState(false)
   const t = useT()
   const lang = useLangStore((s) => s.lang)
   const toggleLang = useLangStore((s) => s.toggle)
 
   useEffect(() => {
+    api.platform().then((os) => setIsMac(os === 'macos')).catch(() => setIsMac(false))
     const settings = useSettingsStore.getState()
     api.getSettings().then(settings.setSettings).catch(console.error)
     api.checkOllama().then(settings.setAi).catch(() => settings.setAi({ state: 'unreachable' }))
@@ -46,6 +49,7 @@ export default function App() {
     { id: 'files', label: t('navFiles') },
     { id: 'duplicates', label: t('navDuplicates') },
     { id: 'organize', label: t('navOrganize') },
+    ...(isMac ? [{ id: 'photos' as Tab, label: t('navPhotos') }] : []),
     { id: 'settings', label: t('navSettings') },
   ]
 
@@ -83,6 +87,12 @@ export default function App() {
         {tab === 'duplicates' && <DuplicatesView />}
         {tab === 'organize' && <OrganizerView />}
         {tab === 'settings' && <SettingsView />}
+        {/* Kept mounted: a library scan or AI run goes on while another tab is open. */}
+        {isMac && (
+          <div className={tab === 'photos' ? 'h-full' : 'hidden'}>
+            <PhotosView />
+          </div>
+        )}
       </main>
     </div>
   )

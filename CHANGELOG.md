@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.0] - 2026-09-22
+
+### Added
+
+- **Apple Photos mode (macOS).** A new tab reads the Photos library through PhotoKit and groups what takes space: videos largest first, screenshots Photos marks, unpicked burst frames, and with the model memes and greeting pictures, photos of receipts and documents, and screenshots Photos did not mark. Each group becomes an album "LifeSort: …". LifeSort never deletes or moves a photo; deleting happens in the Photos app, which frees the space on the iPhone too through iCloud. Favourites are never suggested, the model sees previews only, and a long run can be stopped.
+- Tested on a library of 46 photos and 3 videos: all memes, photos of documents and screenshots found, two ordinary photos wrongly under screenshots, favourite left out, a second album creation extends the album. The burst group is untested because the library had no bursts; the README says so.
+- `LIFESORT_MAX_PHOTOS`: when set, the Photos mode counts the library and stops before reading anything if it holds more items. Used for testing against a test library.
+
+### Fixed
+
+- Messages in the Photos tab follow a language switch instead of keeping the language they were created in.
+
+---
+
 ## [1.3.1] - 2026-09-22
 
 ### Changed

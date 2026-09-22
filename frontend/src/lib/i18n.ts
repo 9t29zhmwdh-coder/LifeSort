@@ -87,6 +87,23 @@ const en = {
   catTaxDocument: 'Tax document', catLetter: 'Letter', catCertificate: 'Certificate', catReport: 'Report',
   catInstallerApp: 'Installer', catDownloadArchive: 'Archive', catDownloadAsset: 'Asset', catDownloadJunk: 'Junk',
   catVideo: 'Video', catAudio: 'Audio', catCode: 'Code', catUnknown: 'Unknown',
+
+  navPhotos: 'Photos library',
+  photosIntro: 'Finds what takes space in Apple Photos and collects it in albums. LifeSort never deletes: open the album in Photos, pick what should go and delete it there. Through iCloud the space is freed on the iPhone too, and deleted items stay 30 days in Recently Deleted.',
+  photosRead: 'Read Photos library', photosReading: 'Reading… {{done}}/{{total}}', photosRereading: 'Read again',
+  photosDenied: 'LifeSort has no access to Photos. Allow it in System Settings > Privacy & Security > Photos, then read again.',
+  photosLimited: 'LifeSort only sees the photos you shared with it. For the whole library, choose "Full Access" in System Settings > Privacy & Security > Photos.',
+  photosUnsupported: 'The Photos library exists only on macOS.',
+  photosError: 'Reading failed: {{msg}}',
+  photosSummary: '{{count}} photos and videos · {{size}}',
+  photosClassify: 'Find memes and documents with AI', photosClassifying: 'Looking at photos… {{done}}/{{total}}',
+  photosCancel: 'Stop', photosClassifyHint: 'The model looks at a small preview of each photo. At a few seconds per photo, a large library takes hours; you can stop and continue later.',
+  photosNothing: 'Nothing to clean up found.',
+  groupVideos: 'Videos', groupScreenshots: 'Screenshots', groupBurstExtras: 'Unpicked burst photos',
+  groupMemes: 'Memes and greeting pictures', groupPhotographedDocuments: 'Photos of receipts and documents',
+  albumPrefix: 'LifeSort: ', createAlbum: 'Create album', creatingAlbum: 'Creating…',
+  albumCreated: 'Album "{{title}}" now holds {{n}} items.', openPhotos: 'Open Photos',
+  largest: 'Largest',
 }
 
 type TranslationKey = keyof typeof en
@@ -147,6 +164,23 @@ const de: Record<TranslationKey, string> = {
   catTaxDocument: 'Steuerdokument', catLetter: 'Brief', catCertificate: 'Zertifikat', catReport: 'Bericht',
   catInstallerApp: 'Installer', catDownloadArchive: 'Archiv', catDownloadAsset: 'Asset', catDownloadJunk: 'Müll',
   catVideo: 'Video', catAudio: 'Audio', catCode: 'Code', catUnknown: 'Unbekannt',
+
+  navPhotos: 'Fotos-Mediathek',
+  photosIntro: 'Findet, was in Apple Fotos Platz belegt, und sammelt es in Alben. LifeSort löscht nichts: Öffne das Album in Fotos, wähle aus, was weg soll, und lösche es dort. Über iCloud wird der Platz auch auf dem iPhone frei, und Gelöschtes bleibt 30 Tage unter „Zuletzt gelöscht“.',
+  photosRead: 'Fotos-Mediathek lesen', photosReading: 'Lese… {{done}}/{{total}}', photosRereading: 'Neu lesen',
+  photosDenied: 'LifeSort hat keinen Zugriff auf Fotos. Erlaube ihn unter Systemeinstellungen > Datenschutz & Sicherheit > Fotos und lies dann neu.',
+  photosLimited: 'LifeSort sieht nur die Fotos, die du freigegeben hast. Für die ganze Mediathek unter Systemeinstellungen > Datenschutz & Sicherheit > Fotos „Voller Zugriff“ wählen.',
+  photosUnsupported: 'Die Fotos-Mediathek gibt es nur auf macOS.',
+  photosError: 'Lesen fehlgeschlagen: {{msg}}',
+  photosSummary: '{{count}} Fotos und Videos · {{size}}',
+  photosClassify: 'Memes und Dokumente mit KI finden', photosClassifying: 'Schaue Fotos an… {{done}}/{{total}}',
+  photosCancel: 'Stoppen', photosClassifyHint: 'Das Modell schaut sich eine kleine Vorschau jedes Fotos an. Bei einigen Sekunden pro Foto dauert eine grosse Mediathek Stunden; du kannst stoppen und später weitermachen.',
+  photosNothing: 'Nichts zum Aufräumen gefunden.',
+  groupVideos: 'Videos', groupScreenshots: 'Screenshots', groupBurstExtras: 'Nicht ausgewählte Serienbilder',
+  groupMemes: 'Memes und Grussbilder', groupPhotographedDocuments: 'Fotos von Belegen und Dokumenten',
+  albumPrefix: 'LifeSort: ', createAlbum: 'Album anlegen', creatingAlbum: 'Lege an…',
+  albumCreated: 'Album «{{title}}» enthält jetzt {{n}} Objekte.', openPhotos: 'Fotos öffnen',
+  largest: 'Die grössten',
 }
 
 const translations: Record<Lang, Record<TranslationKey, string>> = { en, de }
