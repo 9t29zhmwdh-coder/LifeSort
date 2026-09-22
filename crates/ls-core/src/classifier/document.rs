@@ -1,31 +1,22 @@
 use crate::ai::AiBackend;
-use crate::ai::prompts::DOCUMENT_CLASSIFY;
 use crate::models::{Classification, ClassifierKind, FileEntry};
+use std::io::Read;
 
+/// Plain text and Markdown. Office formats would need a zip and XML parser
+/// each; they are classified as unknown and left where they are.
 pub async fn classify(entry: &FileEntry, ai: Option<&dyn AiBackend>) -> Classification {
-    let text = read_text_content(entry);
-
-    if let (Some(backend), Some(ref text)) = (ai, &text) {
-        if !text.trim().is_empty() {
-            let truncated = &text[..text.len().min(4000)];
-            if let Ok(c) = backend.classify_text(truncated, DOCUMENT_CLASSIFY).await {
-                return c;
-            }
-        }
+    match read_text_content(entry) {
+        Some(text) => super::classify_text(&text, ai).await,
+        None => Classification::unknown(ClassifierKind::Rules),
     }
-
-    if let Some(ref text) = text {
-        return crate::classifier::pdf::rule_classify_text_pub(text);
-    }
-
-    Classification::unknown(ClassifierKind::Rules)
 }
 
 fn read_text_content(entry: &FileEntry) -> Option<String> {
-    match entry.mime_type.as_str() {
-        "text/plain" | "text/markdown" => {
-            std::fs::read_to_string(&entry.path).ok()
-        }
-        _ => None,
+    if !matches!(entry.mime_type.as_str(), "text/plain" | "text/markdown") {
+        return None;
     }
+    // A 2 GB log file must not end up in memory to classify its first page.
+    let mut bytes = Vec::new();
+    std::fs::File::open(&entry.path).ok()?.take(64 * 1024).read_to_end(&mut bytes).ok()?;
+    Some(String::from_utf8_lossy(&bytes).into_owned())
 }

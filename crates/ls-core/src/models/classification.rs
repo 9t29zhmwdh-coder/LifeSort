@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum Category {
     // Photos
@@ -11,6 +11,7 @@ pub enum Category {
     PhotoScreenshot,
     PhotoMeme,
     PhotoDocument,
+    PhotoOther,
     // Documents
     Invoice,
     Contract,
@@ -32,61 +33,92 @@ pub enum Category {
     Unknown,
 }
 
+/// Language of the folder names LifeSort creates on disk.
+///
+/// Follows the UI language, so a German user gets `Fotos/Screenshots` and an
+/// English one `Photos/Screenshots`.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum FolderLang {
+    #[default]
+    En,
+    De,
+}
+
 impl Category {
     /// Returns the relative folder path for this category.
-    pub fn folder_path(&self, date: Option<NaiveDate>) -> String {
+    pub fn folder_path(&self, date: Option<NaiveDate>, lang: FolderLang) -> String {
+        let (template, no_year) = match lang {
+            FolderLang::En => (self.folder_en(), "Undated"),
+            FolderLang::De => (self.folder_de(), "Ohne Datum"),
+        };
         let year = date
             .map(|d| d.format("%Y").to_string())
-            .unwrap_or_else(|| "Sonstiges".to_string());
+            .unwrap_or_else(|| no_year.to_string());
+        template.replace("{year}", &year)
+    }
+
+    fn folder_en(&self) -> &'static str {
         match self {
-            Category::PhotoPerson    => "Fotos/Personen".into(),
-            Category::PhotoLandscape => "Fotos/Orte".into(),
-            Category::PhotoEvent     => format!("Fotos/Ereignisse/{year}"),
-            Category::PhotoScreenshot => "Fotos/Screenshots".into(),
-            Category::PhotoMeme      => "Fotos/Diverses".into(),
-            Category::PhotoDocument  => "Dokumente/Diverses".into(),
-            Category::Invoice        => format!("Dokumente/Rechnungen/{year}"),
-            Category::Contract       => "Dokumente/Vertraege".into(),
-            Category::Guarantee      => "Dokumente/Garantien".into(),
-            Category::TaxDocument    => format!("Dokumente/Steuern/{year}"),
-            Category::Letter         => "Dokumente/Briefe".into(),
-            Category::Certificate    => "Dokumente/Zertifikate".into(),
-            Category::Report         => "Dokumente/Berichte".into(),
-            Category::InstallerApp   => "Downloads/Installer".into(),
-            Category::DownloadArchive => "Downloads/Archive".into(),
-            Category::DownloadAsset  => "Downloads/Assets".into(),
-            Category::DownloadJunk   => "Downloads/Muell".into(),
-            Category::Video          => "Medien/Videos".into(),
-            Category::Audio          => "Medien/Audio".into(),
-            Category::Code           => "Entwicklung".into(),
-            Category::Unknown        => "Sonstiges".into(),
+            Category::PhotoPerson => "Photos/People",
+            Category::PhotoLandscape => "Photos/Places",
+            Category::PhotoEvent => "Photos/Events/{year}",
+            Category::PhotoScreenshot => "Photos/Screenshots",
+            Category::PhotoMeme => "Photos/Memes",
+            Category::PhotoDocument => "Photos/Documents",
+            Category::PhotoOther => "Photos/Other",
+            Category::Invoice => "Documents/Invoices/{year}",
+            Category::Contract => "Documents/Contracts",
+            Category::Guarantee => "Documents/Guarantees",
+            Category::TaxDocument => "Documents/Taxes/{year}",
+            Category::Letter => "Documents/Letters",
+            Category::Certificate => "Documents/Certificates",
+            Category::Report => "Documents/Reports",
+            Category::InstallerApp => "Downloads/Installers",
+            Category::DownloadArchive => "Downloads/Archives",
+            Category::DownloadAsset => "Downloads/Assets",
+            Category::DownloadJunk => "Downloads/Junk",
+            Category::Video => "Media/Videos",
+            Category::Audio => "Media/Audio",
+            Category::Code => "Code",
+            Category::Unknown => "Other",
         }
     }
 
-    pub fn display_name(&self) -> &'static str {
+    fn folder_de(&self) -> &'static str {
         match self {
-            Category::PhotoPerson    => "Foto: Person",
-            Category::PhotoLandscape => "Foto: Ort/Landschaft",
-            Category::PhotoEvent     => "Foto: Ereignis",
-            Category::PhotoScreenshot => "Screenshot",
-            Category::PhotoMeme      => "Meme",
-            Category::PhotoDocument  => "Foto: Dokument",
-            Category::Invoice        => "Rechnung",
-            Category::Contract       => "Vertrag",
-            Category::Guarantee      => "Garantie",
-            Category::TaxDocument    => "Steuerdokument",
-            Category::Letter         => "Brief",
-            Category::Certificate    => "Zertifikat",
-            Category::Report         => "Bericht",
-            Category::InstallerApp   => "Installer",
-            Category::DownloadArchive => "Archiv",
-            Category::DownloadAsset  => "Asset",
-            Category::DownloadJunk   => "Müll",
-            Category::Video          => "Video",
-            Category::Audio          => "Audio",
-            Category::Code           => "Quellcode",
-            Category::Unknown        => "Unbekannt",
+            Category::PhotoPerson => "Fotos/Personen",
+            Category::PhotoLandscape => "Fotos/Orte",
+            Category::PhotoEvent => "Fotos/Ereignisse/{year}",
+            Category::PhotoScreenshot => "Fotos/Screenshots",
+            Category::PhotoMeme => "Fotos/Memes",
+            Category::PhotoDocument => "Fotos/Dokumente",
+            Category::PhotoOther => "Fotos/Diverses",
+            Category::Invoice => "Dokumente/Rechnungen/{year}",
+            Category::Contract => "Dokumente/Vertraege",
+            Category::Guarantee => "Dokumente/Garantien",
+            Category::TaxDocument => "Dokumente/Steuern/{year}",
+            Category::Letter => "Dokumente/Briefe",
+            Category::Certificate => "Dokumente/Zertifikate",
+            Category::Report => "Dokumente/Berichte",
+            Category::InstallerApp => "Downloads/Installer",
+            Category::DownloadArchive => "Downloads/Archive",
+            Category::DownloadAsset => "Downloads/Assets",
+            Category::DownloadJunk => "Downloads/Muell",
+            Category::Video => "Medien/Videos",
+            Category::Audio => "Medien/Audio",
+            Category::Code => "Code",
+            Category::Unknown => "Sonstiges",
         }
+    }
+
+    /// Stable snake_case key, identical to the serde representation. The UI
+    /// translates it, so the backend never ships display text.
+    pub fn key(&self) -> String {
+        serde_json::to_value(self)
+            .ok()
+            .and_then(|v| v.as_str().map(String::from))
+            .unwrap_or_else(|| "unknown".into())
     }
 }
 
@@ -95,7 +127,6 @@ impl Category {
 pub enum ClassifierKind {
     Rules,
     Ai,
-    Ocr,
     Extension,
 }
 
@@ -113,17 +144,42 @@ pub struct Classification {
 }
 
 impl Classification {
-    pub fn unknown(kind: ClassifierKind) -> Self {
+    /// A classification with only the category, confidence, tags and source
+    /// set; everything a document parser would extract stays empty.
+    pub fn simple(category: Category, confidence: f32, tags: &[&str], by: ClassifierKind) -> Self {
         Self {
-            category: Category::Unknown,
+            category,
             subcategory: None,
-            confidence: 0.0,
-            tags: vec![],
+            confidence,
+            tags: tags.iter().map(|t| t.to_string()).collect(),
             extracted_date: None,
             extracted_amount: None,
             extracted_sender: None,
             ai_summary: None,
-            classified_by: kind,
+            classified_by: by,
         }
+    }
+
+    pub fn unknown(kind: ClassifierKind) -> Self {
+        Self::simple(Category::Unknown, 0.0, &[], kind)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn folder_names_follow_the_language() {
+        let date = NaiveDate::from_ymd_opt(2024, 3, 1);
+        assert_eq!(Category::Invoice.folder_path(date, FolderLang::En), "Documents/Invoices/2024");
+        assert_eq!(Category::Invoice.folder_path(date, FolderLang::De), "Dokumente/Rechnungen/2024");
+        assert_eq!(Category::PhotoEvent.folder_path(None, FolderLang::De), "Fotos/Ereignisse/Ohne Datum");
+    }
+
+    #[test]
+    fn key_matches_serde() {
+        assert_eq!(Category::PhotoScreenshot.key(), "photo_screenshot");
+        assert_eq!(Category::TaxDocument.key(), "tax_document");
     }
 }
