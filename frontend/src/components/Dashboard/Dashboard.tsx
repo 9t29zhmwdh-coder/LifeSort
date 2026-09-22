@@ -1,57 +1,28 @@
-import { useState } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
-import { api, formatBytes } from '../../lib/tauri'
+import { categoryLabel, formatBytes, kindLabel, type AiStatus, type Category, type FileKind } from '../../lib/tauri'
 import { useScanStore } from '../../stores/scanStore'
 import { useT } from '../../lib/i18n'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-
-type Tab = 'dashboard' | 'files' | 'duplicates' | 'organize' | 'settings'
+import type { Tab } from '../../App'
 
 const KIND_COLORS: Record<string, string> = {
   photo: '#58a6ff', pdf: '#f78166', document: '#d2a8ff',
   video: '#3fb950', audio: '#e3b341', archive: '#8b949e',
-  installer: '#ffa657', code: '#79c0ff', unknown: '#484f58',
+  installer: '#ffa657', code: '#79c0ff', font: '#a5d6ff', unknown: '#484f58',
 }
 
 export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
-  const { session, scanning, classifying, progress, classifyProgress, setSession, setEntries, setStats, setScanning, stats } = useScanStore()
-  const [error, setError] = useState('')
+  const { session, scanning, classifying, progress, classifyProgress, stats, error, lastRunAi, startScan, startClassify } = useScanStore()
   const t = useT()
 
   const handleScan = async () => {
-    setError('')
     const selected = await open({ directory: true, multiple: false })
     if (!selected || Array.isArray(selected)) return
-    setScanning(true)
-    try {
-      const sess = await api.scanDirectory(selected)
-      setSession(sess)
-      // Wait for scan://done event, then load results
-      setTimeout(async () => {
-        const entries = await api.getScanResults(sess.id)
-        setEntries(entries)
-        const s = await api.getStats(sess.id)
-        setStats(s)
-      }, 500)
-    } catch (e) {
-      setError(String(e))
-      setScanning(false)
-    }
-  }
-
-  const handleClassify = async () => {
-    if (!session) return
-    await api.classifyBatch(session.id)
-    setTimeout(async () => {
-      const entries = await api.getScanResults(session.id)
-      setEntries(entries)
-      const s = await api.getStats(session.id)
-      setStats(s)
-    }, 500)
+    await startScan(selected)
   }
 
   const pieData = stats
-    ? Object.entries(stats.by_kind).map(([name, value]) => ({ name, value }))
+    ? Object.entries(stats.by_kind).map(([kind, value]) => ({ kind, name: kindLabel(kind as FileKind), value }))
     : []
 
   return (
@@ -67,13 +38,13 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         </button>
         {session && !scanning && (
           <button
-            onClick={handleClassify}
+            onClick={() => void startClassify()}
             disabled={classifying}
             className="px-5 py-2.5 bg-[#1f6feb] hover:bg-[#388bfd] disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             {classifying
-              ? t('aiClassifying', { done: classifyProgress[0], total: classifyProgress[1] })
-              : t('classifyWithAi')}
+              ? t('classifying', { done: classifyProgress[0], total: classifyProgress[1] })
+              : t('classify')}
           </button>
         )}
         {session && (
@@ -83,7 +54,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         )}
       </div>
 
-      {error && <div className="text-sm text-[#f85149] mb-4">{error}</div>}
+      {error && <div className="text-sm text-[#f85149] mb-4">{t('scanError', { msg: error })}</div>}
+      {lastRunAi && <AiNotice ai={lastRunAi} />}
 
       {stats && (
         <>
@@ -100,10 +72,10 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4">
               <div className="text-sm font-semibold text-[#8b949e] mb-3">{t('byFileType')}</div>
               <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name }) => name}>
+                <PieChart margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
+                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name }) => name}>
                     {pieData.map((entry) => (
-                      <Cell key={entry.name} fill={KIND_COLORS[entry.name] ?? '#8b949e'} />
+                      <Cell key={entry.kind} fill={KIND_COLORS[entry.kind] ?? '#8b949e'} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -120,7 +92,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
                   .sort((a, b) => b[1] - a[1])
                   .map(([cat, count]) => (
                     <div key={cat} className="flex items-center justify-between text-sm">
-                      <span className="text-[#c9d1d9]">{cat}</span>
+                      <span className="text-[#c9d1d9]">{categoryLabel(cat as Category)}</span>
                       <span className="text-[#8b949e]">{count}</span>
                     </div>
                   ))}
@@ -144,6 +116,17 @@ export function Dashboard({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         </div>
       )}
     </div>
+  )
+}
+
+function AiNotice({ ai }: { ai: AiStatus }) {
+  const t = useT()
+  if (ai.state === 'ready') return null
+  const text = ai.state === 'missing_models'
+    ? t('aiMissing', { models: ai.models.join(' ') })
+    : t('aiUnreachable')
+  return (
+    <div className="text-sm text-[#d29922] bg-[#2d1b00] border border-[#d29922] rounded-md px-3 py-2 mb-4">{text}</div>
   )
 }
 

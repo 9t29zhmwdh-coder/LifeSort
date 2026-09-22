@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useScanStore } from '../../stores/scanStore'
-import { categoryLabel, formatBytes, kindIcon, type Category, type FileKind } from '../../lib/tauri'
+import { categoryLabel, formatBytes, kindIcon, kindLabel, type Category, type FileKind } from '../../lib/tauri'
 import { useT, getLang } from '../../lib/i18n'
 
 export function FileGrid() {
@@ -10,11 +10,6 @@ export function FileGrid() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const t = useT()
-  const KIND_LABELS: Record<FileKind, string> = {
-    photo: t('kindPhoto'), pdf: t('kindPdf'), document: t('kindDocument'), video: t('kindVideo'),
-    audio: t('kindAudio'), archive: t('kindArchive'), installer: t('kindInstaller'),
-    code: t('kindCode'), font: t('kindFont'), unknown: t('kindUnknown'),
-  }
 
   const kinds = useMemo(() => {
     const s = new Set(entries.map(e => e.kind))
@@ -51,7 +46,7 @@ export function FileGrid() {
             <Chip active={filterKind === 'all'} onClick={() => setFilterKind('all')}>{t('all')}</Chip>
             {kinds.map(k => (
               <Chip key={k} active={filterKind === k} onClick={() => setFilterKind(k)}>
-                {kindIcon(k)} {KIND_LABELS[k]}
+                {kindIcon(k)} {kindLabel(k)}
               </Chip>
             ))}
           </div>
@@ -118,11 +113,16 @@ export function FileGrid() {
           {selectedEntry.dimensions && (
             <InfoRow label={t('dimensions')} value={`${selectedEntry.dimensions[0]} × ${selectedEntry.dimensions[1]}`} />
           )}
+          {selectedEntry.camera && <InfoRow label={t('camera')} value={selectedEntry.camera} />}
           {selectedEntry.classification && (
             <>
               <div className="mt-4 mb-2 text-xs font-semibold text-[#8b949e] uppercase tracking-wider">{t('classification')}</div>
               <InfoRow label={t('category')} value={categoryLabel(selectedEntry.classification.category)} />
               <InfoRow label={t('confidence')} value={`${(selectedEntry.classification.confidence * 100).toFixed(0)}%`} />
+              <InfoRow
+                label={t('source')}
+                value={{ ai: t('sourceAi'), rules: t('sourceRules'), extension: t('sourceExtension') }[selectedEntry.classification.classified_by]}
+              />
               {selectedEntry.classification.extracted_date && (
                 <InfoRow label={t('date')} value={selectedEntry.classification.extracted_date} />
               )}
