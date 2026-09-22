@@ -59,6 +59,9 @@ pub async fn photos_scan(app: AppHandle, state: State<'_, Arc<AppState>>) -> LsR
         let done = match result {
             Ok(Ok(assets)) => {
                 let summary = PhotosDone { count: assets.len(), bytes: assets.iter().map(|a| a.bytes).sum(), error: None };
+                // One line per step on stderr: invisible in normal use, and
+                // the only trace when something goes wrong on a user's Mac.
+                eprintln!("photos: read {} items, {} bytes", summary.count, summary.bytes);
                 *photos.write().await = assets;
                 ai.write().await.clear();
                 summary
@@ -159,6 +162,7 @@ pub async fn photos_classify(app: AppHandle, state: State<'_, Arc<AppState>>) ->
             }
             let _ = app.emit("photos://classify-progress", (i + 1, total));
         }
+        eprintln!("photos: model looked at {total} photos, {} in groups", results.read().await.len());
         let _ = app.emit("photos://classify-done", total);
     });
     Ok(PhotosClassifyStart { total, ai })
@@ -185,6 +189,7 @@ pub async fn photos_add_album(key: GroupKey, title: String, state: State<'_, Arc
     let added = tokio::task::spawn_blocking(move || ls_photos::add_to_album(&title, &ids))
         .await
         .map_err(|e| anyhow::anyhow!("{e}"))??;
+    eprintln!("photos: album {key:?} now holds {added} items");
     Ok(added)
 }
 
