@@ -1,6 +1,6 @@
 {
   "productName": "LifeSort",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "identifier": "ch.raystudio.lifesort",
   "build": {
     "frontendDist": "../frontend/dist",
@@ -35,6 +35,10 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-",
+      "entitlements": "LifeSort.entitlements"
+    }
   }
 }
