@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.2] - 2026-09-25
+
+### Fixed
+
+- **The Photos permission could not stick.** The macOS app was only signed by the linker, with a generated identifier (`lifesort_tauri-0d773fb7cbf1360b`) instead of `ch.raystudio.lifesort`. macOS ties the Photos permission to that identity, so the Apple Photos mode added in 1.4.0 could not keep its access. The bundle is now signed ad hoc as a whole (`signingIdentity "-"`), which gives it a stable identifier.
+- With that signing the app runs under the Hardened Runtime, which refuses the Photos library unless the app declares it. The entitlement `com.apple.security.personal-information.photos-library` is now included.
+
+---
+
 ## [1.4.1] - 2026-09-22
 
 ### Security
