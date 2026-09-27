@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.3] - 2026-09-27
+
+### Changed
+
+Dependency and CI updates merged since v1.4.2, each with green checks:
+
+- chore(ci): bump the actions group across 1 directory with 5 updates (#91)
+- chore(deps): bump the npm group across 1 directory with 10 updates (#93)
+- chore(deps): bump lopdf from 0.44.0 to 0.45.0 (#101)
+- chore(deps): bump the cargo group across 1 directory with 10 updates (#99)
+
+---
+
 ## [1.4.2] - 2026-09-25
 
 ### Fixed
