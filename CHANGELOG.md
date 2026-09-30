@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.6] - 2026-09-30
+
+### Changed
+
+Dependency and CI updates merged since v1.4.5, each with green checks:
+
+- chore(deps): bump dirs from 6.0.0 to 7.0.0 (#100)
+- chore(deps): bump vite from 8.3.0 to 8.3.1 in /frontend in the npm group (#105)
+
+---
+
 ## [1.4.5] - 2026-09-30
 
 ### Changed
