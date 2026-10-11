@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.7] - 2026-10-11
+
+### Security
+
+Fixes for the two low-severity findings of the Claude Security scan of 2026-10-11:
+
+- PDF text extraction now bounds decompression (8 MiB per stream), skips PDFs over 50 MiB and runs off the async runtime, so a crafted PDF with nested Flate streams can no longer exhaust memory (CWE-409).
+- The CLI `organize` output prints file names with Debug formatting, so control characters and escape sequences in hostile file names can no longer reach the terminal (CWE-150).
+
+---
+
 ## [1.4.6] - 2026-09-30
 
 ### Changed

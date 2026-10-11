@@ -120,11 +120,12 @@ async fn main() -> Result<()> {
             for action in &mut actions {
                 if execute {
                     if let Err(e) = organizer::execute_action(action) {
-                        eprintln!("  error: {} ({e})", action.source_path);
+                        eprintln!("  error: {:?} ({e})", action.source_path);
                         continue;
                     }
                 }
-                println!("  {} -> {}", action.source_path, action.target_path.as_deref().unwrap_or("-"));
+                // Debug formatting escapes control characters from hostile file names.
+                println!("  {:?} -> {:?}", action.source_path, action.target_path.as_deref().unwrap_or("-"));
             }
         }
     }
